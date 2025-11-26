@@ -25,19 +25,18 @@
 
 ## Phase 2: Database Layer
 
-- [ ] **Create Mongoose connection singleton**
+- [x] **Create Mongoose connection singleton**
   - Handle connection in `src/lib/server/db/connection.ts`
-  - Ensure single connection across hot reloads (dev mode caveat)
 
-- [ ] **Define Mongoose models**
+- [x] **Define Mongoose models**
   - Publisher (name, slug, type, baseUrl, active)
   - Feed (publisher ref, name, languageCode, languageName, url, polling metadata)
   - Story (feed ref, guid, original/translated content, status, timestamps, contentType)
 
-- [ ] **Connect DB on app startup**
+- [x] **Connect DB on app startup**
   - Call `connectDB()` in root `src/hooks.server.ts`
 
-- [ ] **Create seed script**
+- [x] **Create seed script**
   - Add RFE/RL as primary publisher
   - Seed 3-5 language service feeds for testing (e.g., Ukrainian, Russian, Uzbek)
 

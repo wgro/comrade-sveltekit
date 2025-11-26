@@ -2,6 +2,14 @@
 	"mcpServers": {
 		"svelte": {
 			"url": "https://mcp.svelte.dev/mcp"
+		},
+		"mongodb": {
+			"type": "stdio",
+			"command": "bunx",
+			"args": ["-y", "mongodb-mcp-server@latest", "--readOnly"],
+			"env": {
+				"MDB_MCP_CONNECTION_STRING": "mongodb://localhost:27017"
+			}
 		}
 	}
 }

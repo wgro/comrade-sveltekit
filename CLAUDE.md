@@ -124,7 +124,7 @@ Key fields:
 ## Environment Variables
 
 ```
-MONGODB_URI=mongodb://localhost:27017/comrade
+MONGODB_URI=mongodb://localhost:27017
 GEMINI_API_KEY=your-api-key
 NODE_ENV=development
 ```
@@ -139,7 +139,7 @@ NODE_ENV=development
 	"@mozilla/readability": "^0.5.x",
 	"jsdom": "^24.x",
 	"@google/generative-ai": "latest",
-	"rss-parser": "^3.x"
+	"feedsmith": "latest"
 }
 ```
 
