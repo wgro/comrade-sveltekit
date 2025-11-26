@@ -1,0 +1,7 @@
+{
+  "backend": "@sidequest/mongo-backend",
+  "connection": {
+    "type": "env",
+    "varName": "MONGODB_URI"
+  }
+}
