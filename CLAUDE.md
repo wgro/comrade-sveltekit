@@ -7,18 +7,30 @@ Comrade is a SvelteKit application that aggregates news content from Radio Free 
 ## Tech Stack
 
 - **Framework**: SvelteKit with TypeScript (strict mode)
+- **Runtime**: Bun
 - **Database**: MongoDB with Mongoose ODM
 - **Background Jobs**: Sidequest with `@sidequest/mongo-backend`
 - **LLM Provider**: Google Gemini (for translation and summarization)
 - **Content Extraction**: Mozilla Readability (`@mozilla/readability`) + jsdom
 - **Deployment**: Single VPS running SvelteKit (Node adapter) + Sidequest worker as separate processes
 
+## Guidelines
+
+- Use `bun` instead of `npm`
+- Use the MongoDB MCP server to introspect the DB when necessary
+- Use the Svelte MCP server to reference Svelte and SvelteKit docs
+- Prefer experimental SvelteKit remote functions instead of "load" functions
+- Put remote functions in src/lib/api, and remember they must have a .remote.ts ending
+- Always use context7 when I need code generation, setup or configuration steps, or
+  library/API documentation. This means you should automatically use the Context7 MCP
+  tools to resolve library id and get library docs without me having to explicitly ask.
+
 ## Architecture
 
 ### Two-Process Model
 
-1. **SvelteKit App** (`npm run dev`) - Web UI, API routes, job enqueuing
-2. **Sidequest Worker** (`npm run dev:worker`) - Background job processing
+1. **SvelteKit App** (`bun run dev`) - Web UI, API routes, job enqueuing
+2. **Sidequest Worker** Started in src/hooks.server.ts when the server is started
 
 Both processes share:
 
