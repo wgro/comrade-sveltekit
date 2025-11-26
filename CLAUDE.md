@@ -1,0 +1,153 @@
+# Comrade - Project Context
+
+## Overview
+
+Comrade is a SvelteKit application that aggregates news content from Radio Free Europe/Radio Liberty (RFE/RL) language services and competitor outlets. It automatically fetches articles via RSS, extracts full content, translates to English, and generates summaries.
+
+## Tech Stack
+
+- **Framework**: SvelteKit with TypeScript (strict mode)
+- **Database**: MongoDB with Mongoose ODM
+- **Background Jobs**: Sidequest with `@sidequest/mongo-backend`
+- **LLM Provider**: Google Gemini (for translation and summarization)
+- **Content Extraction**: Mozilla Readability (`@mozilla/readability`) + jsdom
+- **Deployment**: Single VPS running SvelteKit (Node adapter) + Sidequest worker as separate processes
+
+## Architecture
+
+### Two-Process Model
+
+1. **SvelteKit App** (`npm run dev`) - Web UI, API routes, job enqueuing
+2. **Sidequest Worker** (`npm run dev:worker`) - Background job processing
+
+Both processes share:
+
+- MongoDB connection
+- Domain code in `src/lib/server/`
+
+### Job Pipeline
+
+```
+PollAllFeedsJob (scheduled every 15 min)
+    └─► PollFeedJob (per feed)
+            └─► FetchStoryJob (per new entry)
+                    └─► TranslateStoryJob
+                            └─► SummarizeStoryJob
+```
+
+Each job chains to the next on success. Failed jobs use Sidequest's built-in retry with exponential backoff.
+
+## Project Structure
+
+```
+comrade/
+├── src/
+│   ├── lib/
+│   │   ├── server/           # Server-only code (DB, services)
+│   │   │   ├── db/
+│   │   │   │   ├── connection.ts
+│   │   │   │   └── models/
+│   │   │   └── services/
+│   │   │       ├── rss/
+│   │   │       ├── extraction/
+│   │   │       ├── translation/
+│   │   │       ├── summarization/
+│   │   │       └── llm.ts    # Unified Gemini client
+│   │   └── components/
+│   └── routes/
+├── worker/
+│   ├── index.ts              # Worker entry point
+│   ├── jobs/                 # Job classes
+│   └── schedules.ts
+└── scripts/
+    └── seed.ts               # Seed RFE/RL feeds
+```
+
+## Data Models
+
+### Publisher
+
+News organizations (RFE/RL, BBC, etc.). Has `type`: 'primary' or 'competitor'.
+
+### Feed
+
+Individual RSS feeds belonging to a Publisher. Tracks language, poll interval, last poll time, errors.
+
+### Story
+
+The core content entity. Tracks processing status through states: `pending` → `fetched` → `translated` → `summarized` (or `failed`).
+
+Key fields:
+
+- `guid`: RSS entry GUID for deduplication
+- `originalTitle`, `originalContent`, `originalLanguage`
+- `translatedTitle`, `translatedContent`
+- `summary`
+- `status`: Processing state
+- `contentType`: 'article' | 'video' | 'newsletter' (for future expansion)
+
+## Conventions
+
+### TypeScript
+
+- Strict mode enabled
+- Explicit return types on all functions
+- Interface names prefixed with `I` for Mongoose documents (e.g., `IStory`)
+- Use `unknown` over `any`, narrow with type guards
+
+### Mongoose
+
+- Models in `src/lib/server/db/models/`
+- Each model file exports interface and model
+- Use `lean()` for read-only queries (performance)
+- Populate references explicitly, avoid deep nesting
+
+### Sidequest Jobs
+
+- One job class per file in `worker/jobs/`
+- Job names match class names (e.g., `FetchStoryJob`)
+- Jobs receive IDs, not full documents (fetch fresh in `run()`)
+- Chain jobs by enqueuing next job at end of `run()`
+
+### Services
+
+- Pure functions where possible
+- Services don't import Mongoose models directly; receive data as arguments
+- Extraction service uses strategy pattern for future publisher-specific extractors
+
+### Error Handling
+
+- Jobs should throw on unrecoverable errors (Sidequest handles retry)
+- Log errors with context: `console.error('FetchStoryJob failed', { storyId, error })`
+- Update Story status to 'failed' with error message for visibility in UI
+
+## Environment Variables
+
+```
+MONGODB_URI=mongodb://localhost:27017/comrade
+GEMINI_API_KEY=your-api-key
+NODE_ENV=development
+```
+
+## Key Dependencies
+
+```json
+{
+	"sidequest": "latest",
+	"@sidequest/mongo-backend": "latest",
+	"mongoose": "^8.x",
+	"@mozilla/readability": "^0.5.x",
+	"jsdom": "^24.x",
+	"@google/generative-ai": "latest",
+	"rss-parser": "^3.x"
+}
+```
+
+## Future Expansion
+
+The `contentType` field on Story is designed for future support of:
+
+- **Videos**: Extract transcript, translate, summarize
+- **Newsletters**: Poll email inbox or web archives
+
+Publisher-specific extractors can be added in `src/lib/server/services/extraction/` following the strategy pattern.

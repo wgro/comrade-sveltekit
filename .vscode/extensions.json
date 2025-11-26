@@ -1,0 +1,22 @@
+{
+	// Use separate Prettier and ESLint extensions for ESLint v9
+	// Do NOT use "rvest.vs-code-prettier-eslint" as it's incompatible with ESLint v9
+	"recommendations": [
+		"esbenp.prettier-vscode",
+		"dbaeumer.vscode-eslint",
+		"adrianomelo.cursor-project-rules",
+		"kisstkondoros.vscode-gutter-preview",
+		"pkief.material-icon-theme",
+		"closedcontour.very-smart-select",
+		"ms-vsliveshare.vsliveshare",
+		"bierner.color-info",
+		"github.vscode-pull-request-github",
+        "tamasfe.even-better-toml",
+        "svelte.svelte-vscode",
+        "yoavbls.pretty-ts-errors",
+        "stylelint.vscode-stylelint",
+        "mrmlnc.vscode-scss",
+        "codeandstuff.package-json-upgrade",
+        "mongodb.mongodb-vscode"
+	]
+}
