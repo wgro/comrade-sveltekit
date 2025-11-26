@@ -41,6 +41,9 @@
 	"editor.codeActionsOnSave": {
 		"source.fixAll": "always"
 	},
+	"[scss]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
 	"workbench.editorAssociations": {
 		"*.svg": "default"
 	},

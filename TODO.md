@@ -2,22 +2,22 @@
 
 ## Phase 1: Project Foundation
 
-- [ ] **Initialize SvelteKit project**
+- [x] **Initialize SvelteKit project**
   - Create new SvelteKit app with TypeScript
   - Configure for Node adapter (not static)
   - Set up strict TypeScript config
   - Add path aliases (`$lib/server/*`)
 
-- [ ] **Install core dependencies**
+- [x] **Install core dependencies**
   - mongoose
   - sidequest + @sidequest/mongo-backend
   - @google/generative-ai
   - @mozilla/readability + jsdom
-  - rss-parser
+  - feedsmith for RSS parsing
   - concurrently (dev dependency)
 
 - [ ] **Set up environment configuration**
-  - Create `.env` with MONGODB_URI, GEMINI_API_KEY
+  - Create `mise.local.toml` with MONGODB_URI, GEMINI_API_KEY
   - Configure SvelteKit to load env vars
   - Create `.env.example` for documentation
 
