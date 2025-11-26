@@ -8,6 +8,9 @@ const config = {
 	preprocess: vitePreprocess(),
 	kit: {
 		adapter: adapter(),
+		experimental: {
+			remoteFunctions: true,
+		},
 		alias: {
 			$components: 'src/components',
 			$server: 'src/lib/server',
@@ -15,6 +18,12 @@ const config = {
 			$lib: 'src/lib',
 			$jobs: 'worker/jobs',
 			$styles: 'src/styles',
+			$libApi: 'src/lib/api',
+		}
+	},
+	compilerOptions: {
+		experimental: {
+			async: true
 		}
 	}
 };

@@ -35,7 +35,7 @@
   - Story (feed ref, guid, original/translated content, status, timestamps, contentType)
 
 - [ ] **Connect DB on app startup**
-  - Call `connectDB()` in root `+layout.server.ts`
+  - Call `connectDB()` in root `src/hooks.server.ts`
 
 - [ ] **Create seed script**
   - Add RFE/RL as primary publisher
