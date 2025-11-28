@@ -23,6 +23,7 @@ Comrade is a SvelteKit application that aggregates news content from Radio Free 
 - Always use context7 when I need code generation, setup or configuration steps, or
   library/API documentation. This means you should automatically use the Context7 MCP
   tools to resolve library id and get library docs without me having to explicitly ask.
+- Use the Comrade and Sidequest MCP servers when working with database operations to introspect
 
 ## Architecture
 

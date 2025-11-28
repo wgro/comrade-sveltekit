@@ -25,10 +25,10 @@
 
 ## Phase 2: Database Layer
 
-- [x] **Create Mongoose connection singleton**
+- [x] **Create Prisma connection singleton**
   - Handle connection in `src/lib/server/db/connection.ts`
 
-- [x] **Define Mongoose models**
+- [x] **Define models**
   - Publisher (name, slug, type, baseUrl, active)
   - Feed (publisher ref, name, languageCode, languageName, url, polling metadata)
   - Story (feed ref, guid, original/translated content, status, timestamps, contentType)

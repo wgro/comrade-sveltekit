@@ -22,6 +22,19 @@ export class RssParseError extends Error {
 	}
 }
 
+/**
+ * Fetches an RSS/Atom feed from a URL and parses it into a structured format.
+ *
+ * @param url - The URL of the RSS/Atom feed to fetch
+ * @returns A promise that resolves to the parsed feed data
+ * @throws {RssParseError} If the fetch fails, returns a non-OK status, or parsing fails
+ *
+ * @example
+ * ```ts
+ * const feed = await fetchAndParseFeed('https://example.com/feed.xml');
+ * console.log(feed.title, feed.entries.length);
+ * ```
+ */
 export async function fetchAndParseFeed(url: string): Promise<ParsedFeed> {
 	let response: Response;
 	try {
@@ -38,6 +51,18 @@ export async function fetchAndParseFeed(url: string): Promise<ParsedFeed> {
 	return parseFeedContent(content);
 }
 
+/**
+ * Parses RSS/Atom feed content from a string into a structured format.
+ * Handles both RSS (items) and Atom (entries) feed formats.
+ *
+ * @param content - The raw XML content of the feed
+ * @returns The parsed feed with title and entries
+ * @throws {RssParseError} If parsing fails or the feed structure is invalid
+ *
+ * @remarks
+ * Only entries with both a GUID and link are included in the result.
+ * Missing titles default to empty strings.
+ */
 export function parseFeedContent(content: string): ParsedFeed {
 	let result;
 	try {
@@ -80,6 +105,17 @@ export function parseFeedContent(content: string): ParsedFeed {
 	};
 }
 
+/**
+ * Extracts a unique identifier (GUID) from a feed entry.
+ * Tries multiple fields in order: guid, id, link.
+ *
+ * @param item - The feed entry object
+ * @returns The extracted GUID, or null if none found
+ *
+ * @remarks
+ * Handles both string values and objects with a 'value' property (RSS 2.0 format).
+ * Falls back to using the link as GUID if no explicit identifier exists.
+ */
 function extractGuid(item: Record<string, unknown>): string | null {
 	if ('guid' in item) {
 		const guid = item.guid;
@@ -93,6 +129,15 @@ function extractGuid(item: Record<string, unknown>): string | null {
 	return null;
 }
 
+/**
+ * Extracts the title from a feed or feed entry.
+ *
+ * @param item - The feed or feed entry object
+ * @returns The extracted title, or null if none found
+ *
+ * @remarks
+ * Handles both string values and objects with a 'value' property.
+ */
 function extractTitle(item: Record<string, unknown>): string | null {
 	if ('title' in item) {
 		const title = item.title;
@@ -104,6 +149,18 @@ function extractTitle(item: Record<string, unknown>): string | null {
 	return null;
 }
 
+/**
+ * Extracts the link URL from a feed entry.
+ *
+ * @param item - The feed entry object
+ * @returns The extracted link URL, or null if none found
+ *
+ * @remarks
+ * Handles multiple link formats:
+ * - String values (RSS 2.0)
+ * - Objects with 'href' property (Atom)
+ * - Arrays of links (takes first item)
+ */
 function extractLink(item: Record<string, unknown>): string | null {
 	if ('link' in item) {
 		const link = item.link;
@@ -122,6 +179,18 @@ function extractLink(item: Record<string, unknown>): string | null {
 	return null;
 }
 
+/**
+ * Extracts the publication date from a feed entry.
+ * Tries multiple common date field names in order.
+ *
+ * @param item - The feed entry object
+ * @returns The extracted date, or null if none found or invalid
+ *
+ * @remarks
+ * Checks the following fields in order: pubDate, published, updated, date.
+ * Handles both Date objects and ISO 8601 date strings.
+ * Returns null for invalid date strings.
+ */
 function extractPubDate(item: Record<string, unknown>): Date | null {
 	const dateFields = ['pubDate', 'published', 'updated', 'date'];
 
