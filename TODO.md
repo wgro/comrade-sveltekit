@@ -48,8 +48,8 @@
   - Wrap feedsmith with error handling
   - Return normalized feed entries (guid, title, link, pubDate)
 
-- [ ] **Content extraction service**
-  - Fetch page HTML with fetch or undici
+- [x] **Content extraction service**
+  - Fetch page HTML with fetch
   - Parse with jsdom + Readability
   - Return title, content, author, image
   - Handle extraction failures gracefully

@@ -22,8 +22,9 @@ Comrade is a SvelteKit application that aggregates news content from Radio Free 
 - Put remote functions in src/lib/api, and remember they must have a .remote.ts ending
 - Always use context7 when I need code generation, setup or configuration steps, or
   library/API documentation. This means you should automatically use the Context7 MCP
-  tools to resolve library id and get library docs without me having to explicitly ask.
+  tools to resolve library id and get library docs without me having to explicitly ask
 - Use the Comrade and Sidequest MCP servers when working with database operations to introspect
+- Utilize BEM CSS naming
 
 ## Architecture
 
