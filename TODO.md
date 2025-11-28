@@ -64,7 +64,7 @@
   - Prompt Gemini to translate to English
   - Return translated text
 
-- [ ] **Summarization service**
+- [x] **Summarization service**
   - Accept English text
   - Prompt Gemini for concise summary
   - Return summary

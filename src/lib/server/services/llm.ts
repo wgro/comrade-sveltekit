@@ -1,4 +1,7 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type, type Schema } from '@google/genai';
+
+// Re-export Type and Schema for use in other services
+export { Type, type Schema } from '@google/genai';
 
 /**
  * Custom error class for LLM-related failures.
@@ -19,6 +22,20 @@ export class LlmError extends Error {
 export interface LlmResponse {
 	/** The generated text content */
 	text: string;
+	/** Total token count (input + output), or null if not available */
+	tokenCount: number | null;
+	/** The model name used for generation */
+	modelName: string;
+	/** The reason generation stopped, or null if not available */
+	finishReason: string | null;
+}
+
+/**
+ * Response from structured content generation with metadata.
+ */
+export interface LlmStructuredResponse<T> {
+	/** The parsed structured data */
+	data: T;
 	/** Total token count (input + output), or null if not available */
 	tokenCount: number | null;
 	/** The model name used for generation */
@@ -164,4 +181,96 @@ export async function generateText(prompt: string, config: LlmConfig = {}): Prom
 	}
 
 	throw new LlmError(`Failed to generate text after ${maxRetries + 1} attempts`, lastError);
+}
+
+/**
+ * Generates structured content using Google's Gemini models with JSON schema enforcement.
+ *
+ * @param prompt - The text prompt to send to the model
+ * @param responseSchema - Schema defining the expected JSON structure
+ * @param config - Optional configuration for the generation
+ * @returns A promise that resolves to the parsed structured response with metadata
+ * @throws {LlmError} If generation fails after all retries or on non-retryable errors
+ *
+ * @example
+ * ```ts
+ * const response = await generateStructuredContent<{ title: string; summary: string }>(
+ *   'Summarize this article...',
+ *   {
+ *     type: Type.OBJECT,
+ *     properties: {
+ *       title: { type: Type.STRING, description: 'Article title' },
+ *       summary: { type: Type.STRING, description: 'Article summary' }
+ *     },
+ *     required: ['title', 'summary']
+ *   }
+ * );
+ * console.log(response.data.title);
+ * ```
+ */
+export async function generateStructuredContent<T>(
+	prompt: string,
+	responseSchema: Schema,
+	config: LlmConfig = {}
+): Promise<LlmStructuredResponse<T>> {
+	const ai = getClient();
+	const modelName = config.model ?? DEFAULT_MODEL;
+	const maxRetries = config.maxRetries ?? DEFAULT_MAX_RETRIES;
+
+	let lastError: unknown;
+
+	for (let attempt = 0; attempt <= maxRetries; attempt++) {
+		try {
+			const response = await ai.models.generateContent({
+				model: modelName,
+				contents: prompt,
+				config: {
+					maxOutputTokens: config.maxOutputTokens,
+					temperature: config.temperature,
+					responseMimeType: 'application/json',
+					responseSchema
+				}
+			});
+
+			const text = response.text;
+			if (text === undefined || text === null) {
+				throw new LlmError('No text content in response');
+			}
+
+			let data: T;
+			try {
+				data = JSON.parse(text) as T;
+			} catch (parseError) {
+				throw new LlmError(
+					`Failed to parse JSON response: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+					parseError
+				);
+			}
+
+			return {
+				data,
+				tokenCount: response.usageMetadata?.totalTokenCount ?? null,
+				modelName,
+				finishReason: response.candidates?.[0]?.finishReason ?? null
+			};
+		} catch (error) {
+			lastError = error;
+
+			if (error instanceof LlmError) {
+				throw error;
+			}
+
+			if (!isRetryableError(error) || attempt === maxRetries) {
+				throw new LlmError(
+					`Failed to generate structured content: ${error instanceof Error ? error.message : String(error)}`,
+					error
+				);
+			}
+
+			const delayMs = DEFAULT_RETRY_DELAY_MS * Math.pow(2, attempt);
+			await delay(delayMs);
+		}
+	}
+
+	throw new LlmError(`Failed to generate structured content after ${maxRetries + 1} attempts`, lastError);
 }
