@@ -59,7 +59,7 @@
   - Wrapper for chat completions with retry logic
   - Configurable model selection
 
-- [ ] **Translation service**
+- [x] **Translation service**
   - Accept text + source language
   - Prompt Gemini to translate to English
   - Return translated text

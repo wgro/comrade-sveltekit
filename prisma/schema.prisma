@@ -87,13 +87,13 @@ model Translation {
 }
 
 model Summary {
-  id            String    @id @default(cuid())
-  storyId       String
-  translationId String?   // Optional: link to specific translation
-  summaryType   String    @default("brief") // 'brief' | 'detailed' | 'bullets'
-  content       String
-  status        String    @default("pending") // 'pending' | 'completed' | 'failed'
-  errorMessage  String?
+  id              String    @id @default(cuid())
+  storyId         String
+  translationId   String?   // Optional: link to specific translation
+  summarizedTitle String?
+  content         String
+  status          String    @default("pending") // 'pending' | 'completed' | 'failed'
+  errorMessage    String?
   // LLM metadata
   modelName     String?
   tokenCount    Int?
