@@ -17,6 +17,8 @@
         "stylelint.vscode-stylelint",
         "mrmlnc.vscode-scss",
         "codeandstuff.package-json-upgrade",
-        "mongodb.mongodb-vscode"
+		"mongodb.mongodb-vscode",
+		"vitest.explorer",
+		"anthropic.claude-code"
 	]
 }

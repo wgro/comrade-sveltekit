@@ -44,7 +44,7 @@
 
 ## Phase 3: Core Services
 
-- [ ] **RSS parsing service**
+- [x] **RSS parsing service**
   - Wrap feedsmith with error handling
   - Return normalized feed entries (guid, title, link, pubDate)
 

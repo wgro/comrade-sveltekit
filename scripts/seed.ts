@@ -21,7 +21,7 @@ async function seed() {
 			name: 'Central Newsroom',
 			languageCode: 'en',
 			languageName: 'English',
-			url: 'https://www.rferl.org/api'
+			url: 'https://www.rferl.org/api/'
 		},
 		{
 			publisher: rferl._id,
