@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/lib/server/db/generated"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Publisher {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  type      String   // 'primary' | 'competitor'
+  baseUrl   String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  feeds Feed[]
+}
+
+model Feed {
+  id           String    @id @default(cuid())
+  publisherId  String
+  name         String
+  languageCode String
+  languageName String
+  url          String
+  active       Boolean   @default(true)
+  lastPolledAt DateTime?
+  lastError    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  publisher Publisher @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  stories   Story[]
+
+  @@unique([publisherId, url])
+}
+
+model Story {
+  id               String    @id @default(cuid())
+  feedId           String
+  guid             String
+  sourceUrl        String
+  originalTitle    String
+  originalContent  String?
+  originalLanguage String
+  status           String    @default("pending") // 'pending' | 'fetched' | 'failed'
+  errorMessage     String?
+  contentType      String    @default("article") // 'article' | 'video' | 'newsletter'
+  publishedAt      DateTime?
+  author           String?
+  imageUrl         String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  feed         Feed          @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  translations Translation[]
+  summaries    Summary[]
+
+  @@unique([feedId, guid])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Translation {
+  id                String    @id @default(cuid())
+  storyId           String
+  targetLanguage    String    @default("en")
+  translatedTitle   String
+  translatedContent String?
+  status            String    @default("pending") // 'pending' | 'completed' | 'failed'
+  errorMessage      String?
+  // LLM metadata
+  modelName         String?
+  tokenCount        Int?
+  generatedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, targetLanguage])
+  @@index([status])
+}
+
+model Summary {
+  id            String    @id @default(cuid())
+  storyId       String
+  translationId String?   // Optional: link to specific translation
+  summaryType   String    @default("brief") // 'brief' | 'detailed' | 'bullets'
+  content       String
+  status        String    @default("pending") // 'pending' | 'completed' | 'failed'
+  errorMessage  String?
+  // LLM metadata
+  modelName     String?
+  tokenCount    Int?
+  generatedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}

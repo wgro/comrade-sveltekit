@@ -19,6 +19,8 @@
         "codeandstuff.package-json-upgrade",
 		"mongodb.mongodb-vscode",
 		"vitest.explorer",
-		"anthropic.claude-code"
+		"anthropic.claude-code",
+		"prisma.prisma",
+		"qwtel.sqlite-viewer"
 	]
 }

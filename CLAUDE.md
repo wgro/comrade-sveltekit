@@ -8,8 +8,8 @@ Comrade is a SvelteKit application that aggregates news content from Radio Free 
 
 - **Framework**: SvelteKit with TypeScript (strict mode)
 - **Runtime**: Bun
-- **Database**: MongoDB with Mongoose ODM
-- **Background Jobs**: Sidequest with `@sidequest/mongo-backend`
+- **Database**: SQLite with Prisma ORM
+- **Background Jobs**: Sidequest with `@sidequest/sqlite-backend`
 - **LLM Provider**: Google Gemini (for translation and summarization)
 - **Content Extraction**: Mozilla Readability (`@mozilla/readability`) + jsdom
 - **Deployment**: Single VPS running SvelteKit (Node adapter) + Sidequest worker as separate processes
@@ -17,7 +17,6 @@ Comrade is a SvelteKit application that aggregates news content from Radio Free 
 ## Guidelines
 
 - Use `bun` instead of `npm`
-- Use the MongoDB MCP server to introspect the DB when necessary
 - Use the Svelte MCP server to reference Svelte and SvelteKit docs
 - Prefer experimental SvelteKit remote functions instead of "load" functions
 - Put remote functions in src/lib/api, and remember they must have a .remote.ts ending
@@ -34,7 +33,7 @@ Comrade is a SvelteKit application that aggregates news content from Radio Free 
 
 Both processes share:
 
-- MongoDB connection
+- SQLite database (storage/comrade.db for app, storage/sidequest.db for jobs)
 - Domain code in `src/lib/server/`
 
 ### Job Pipeline
@@ -53,12 +52,18 @@ Each job chains to the next on success. Failed jobs use Sidequest's built-in ret
 
 ```
 comrade/
+├── prisma/
+│   └── schema.prisma         # Prisma schema definition
+├── storage/                  # SQLite databases (gitignored)
+│   ├── comrade.db            # App database
+│   └── sidequest.db          # Job queue database
 ├── src/
 │   ├── lib/
 │   │   ├── server/           # Server-only code (DB, services)
 │   │   │   ├── db/
-│   │   │   │   ├── connection.ts
-│   │   │   │   └── models/
+│   │   │   │   ├── connection.ts  # Prisma client
+│   │   │   │   ├── generated/     # Prisma generated client
+│   │   │   │   └── models/        # Type exports & constants
 │   │   │   └── services/
 │   │   │       ├── rss/
 │   │   │       ├── extraction/
@@ -71,8 +76,9 @@ comrade/
 │   ├── index.ts              # Worker entry point
 │   ├── jobs/                 # Job classes
 │   └── schedules.ts
-└── scripts/
-    └── seed.ts               # Seed RFE/RL feeds
+├── scripts/
+│   └── seed.ts               # Seed RFE/RL feeds
+└── prisma.config.ts          # Prisma CLI configuration
 ```
 
 ## Data Models
@@ -87,16 +93,38 @@ Individual RSS feeds belonging to a Publisher. Tracks language, poll interval, l
 
 ### Story
 
-The core content entity. Tracks processing status through states: `pending` → `fetched` → `translated` → `summarized` (or `failed`).
+The core content entity. Tracks processing status: `pending` → `fetched` (or `failed`).
 
 Key fields:
 
 - `guid`: RSS entry GUID for deduplication
 - `originalTitle`, `originalContent`, `originalLanguage`
-- `translatedTitle`, `translatedContent`
-- `summary`
-- `status`: Processing state
+- `status`: Processing state for content fetching
 - `contentType`: 'article' | 'video' | 'newsletter' (for future expansion)
+
+### Translation
+
+Translations of stories. Supports multiple translations per story (different target languages).
+
+Key fields:
+
+- `storyId`: Reference to parent Story
+- `targetLanguage`: Target language code (default: 'en')
+- `translatedTitle`, `translatedContent`
+- `status`: 'pending' | 'completed' | 'failed'
+- LLM metadata: `modelName`, `tokenCount`, `generatedAt`
+
+### Summary
+
+Summaries of stories. Supports multiple summaries per story (different types/lengths).
+
+Key fields:
+
+- `storyId`: Reference to parent Story
+- `summaryType`: 'brief' | 'detailed' | 'bullets'
+- `content`: The summary text
+- `status`: 'pending' | 'completed' | 'failed'
+- LLM metadata: `modelName`, `tokenCount`, `generatedAt`
 
 ## Conventions
 
@@ -104,15 +132,15 @@ Key fields:
 
 - Strict mode enabled
 - Explicit return types on all functions
-- Interface names prefixed with `I` for Mongoose documents (e.g., `IStory`)
+- Use Prisma generated types (Publisher, Feed, Story, Translation, Summary)
 - Use `unknown` over `any`, narrow with type guards
 
-### Mongoose
+### Prisma
 
-- Models in `src/lib/server/db/models/`
-- Each model file exports interface and model
-- Use `lean()` for read-only queries (performance)
-- Populate references explicitly, avoid deep nesting
+- Schema in `prisma/schema.prisma`
+- Generated client in `src/lib/server/db/generated/`
+- Use `prisma` client from `$lib/server/db/connection`
+- Type constants in `$lib/server/db/models` (e.g., `StoryStatus.PENDING`)
 
 ### Sidequest Jobs
 
@@ -124,7 +152,7 @@ Key fields:
 ### Services
 
 - Pure functions where possible
-- Services don't import Mongoose models directly; receive data as arguments
+- Services don't import Prisma client directly; receive data as arguments
 - Extraction service uses strategy pattern for future publisher-specific extractors
 
 ### Error Handling
@@ -133,10 +161,18 @@ Key fields:
 - Log errors with context: `console.error('FetchStoryJob failed', { storyId, error })`
 - Update Story status to 'failed' with error message for visibility in UI
 
+## Database Commands
+
+```bash
+bun run db:generate  # Generate Prisma client after schema changes
+bun run db:push      # Push schema changes to database (development)
+bun run db:studio    # Open Prisma Studio GUI
+bun run db:seed      # Seed initial data
+```
+
 ## Environment Variables
 
 ```
-MONGODB_URI=mongodb://localhost:27017
 GEMINI_API_KEY=your-api-key
 NODE_ENV=development
 ```
@@ -145,12 +181,14 @@ NODE_ENV=development
 
 ```json
 {
+	"prisma": "^7.x",
+	"@prisma/client": "^7.x",
+	"@prisma/adapter-libsql": "^7.x",
 	"sidequest": "latest",
-	"@sidequest/mongo-backend": "latest",
-	"mongoose": "^8.x",
-	"@mozilla/readability": "^0.5.x",
-	"jsdom": "^24.x",
-	"@google/generative-ai": "latest",
+	"@sidequest/sqlite-backend": "latest",
+	"@mozilla/readability": "^0.6.x",
+	"jsdom": "^27.x",
+	"@google/genai": "latest",
 	"feedsmith": "latest"
 }
 ```

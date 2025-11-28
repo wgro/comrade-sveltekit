@@ -1,7 +1,7 @@
 {
-  "backend": "@sidequest/mongo-backend",
-  "connection": {
-    "type": "env",
-    "varName": "MONGODB_URI"
-  }
+	"backend": "@sidequest/sqlite-backend",
+	"connection": {
+		"type": "env",
+		"varName": "SIDEQUEST_DB_PATH"
+	}
 }

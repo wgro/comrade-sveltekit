@@ -14,7 +14,11 @@
 		"lint": "prettier --check . && eslint .",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run && npm run test:e2e",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"db:generate": "prisma generate",
+		"db:push": "prisma db push",
+		"db:studio": "prisma studio",
+		"db:seed": "bun run scripts/seed.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.0",
@@ -41,11 +45,13 @@
 	"dependencies": {
 		"@google/genai": "^1.30.0",
 		"@mozilla/readability": "^0.6.0",
-		"@sidequest/mongo-backend": "^1.12.0",
+		"@prisma/adapter-libsql": "^7.0.1",
+		"@prisma/client": "^7.0.1",
+		"@sidequest/sqlite-backend": "^1.12.0",
 		"feedfinder-ts": "^1.0.3",
 		"feedsmith": "^2.6.1",
 		"jsdom": "^27.2.0",
-		"mongoose": "^9.0.0",
+		"prisma": "^7.0.1",
 		"sidequest": "^1.12.0",
 		"zod": "^4.1.13"
 	}

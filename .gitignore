@@ -26,3 +26,11 @@ vite.config.ts.timestamp-*
 # Mise
 mise.local.toml
 mise.*.local.toml
+
+# SQLite databases
+storage/*.db
+storage/*.db-journal
+storage/*.db-wal
+
+# Prisma generated client
+src/lib/server/db/generated/

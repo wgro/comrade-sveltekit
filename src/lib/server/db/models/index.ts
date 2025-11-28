@@ -1,3 +1,38 @@
-export { Publisher, type IPublisher } from './Publisher';
-export { Feed, type IFeed } from './Feed';
-export { Story, type IStory } from './Story';
+// Re-export Prisma types
+export type { Publisher, Feed, Story, Translation, Summary } from '../generated/client';
+
+// Type-safe constants for enum-like fields
+export const PublisherType = {
+	PRIMARY: 'primary',
+	COMPETITOR: 'competitor'
+} as const;
+
+export const StoryStatus = {
+	PENDING: 'pending',
+	FETCHED: 'fetched',
+	FAILED: 'failed'
+} as const;
+
+export const TranslationStatus = {
+	PENDING: 'pending',
+	COMPLETED: 'completed',
+	FAILED: 'failed'
+} as const;
+
+export const SummaryStatus = {
+	PENDING: 'pending',
+	COMPLETED: 'completed',
+	FAILED: 'failed'
+} as const;
+
+export const ContentType = {
+	ARTICLE: 'article',
+	VIDEO: 'video',
+	NEWSLETTER: 'newsletter'
+} as const;
+
+export const SummaryType = {
+	BRIEF: 'brief',
+	DETAILED: 'detailed',
+	BULLETS: 'bullets'
+} as const;

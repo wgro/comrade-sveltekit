@@ -9,7 +9,7 @@
   - Add path aliases (`$lib/server/*`)
 
 - [x] **Install core dependencies**
-  - mongoose
+  - Prisma and SQLite
   - sidequest + @sidequest/mongo-backend
   - @google/generative-ai
   - @mozilla/readability + jsdom
@@ -17,7 +17,7 @@
   - concurrently (dev dependency)
 
 - [ ] **Set up environment configuration**
-  - Create `mise.local.toml` with MONGODB_URI, GEMINI_API_KEY
+  - Create `mise.local.toml` with GEMINI_API_KEY
   - Configure SvelteKit to load env vars
   - Create `.env.example` for documentation
 
