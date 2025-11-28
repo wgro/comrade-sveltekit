@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { extractFromUrl } from '../extraction';
-import { translateContent } from './index';
+import { extractFromUrl } from '../src/lib/server/services/extraction';
+import { translateContent } from '../src/lib/server/services/translation/index';
 
 const UKRAINIAN_ARTICLE_URL =
 	'https://www.radiosvoboda.org/a/news-tramp-ukazy-baydena-skasuvannya/33608172.html';
