@@ -54,7 +54,7 @@
   - Return title, content, author, image
   - Handle extraction failures gracefully
 
-- [ ] **LLM client**
+- [x] **LLM client**
   - Create unified Gemini client in `src/lib/server/services/llm.ts`
   - Wrapper for chat completions with retry logic
   - Configurable model selection
