@@ -1,5 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import type { Component } from 'svelte';
+	import NavItem from './NavItem.svelte';
+	import PhChartLineUpDuotone from '~icons/ph/chart-line-up-duotone';
+	import PhNewspaperDuotone from '~icons/ph/newspaper-duotone';
+	import PhRssSimpleDuotone from '~icons/ph/rss-simple-duotone';
+	import PhArticleDuotone from '~icons/ph/article-duotone';
 
 	interface SidebarProps {
 		mobileOpen?: boolean;
@@ -8,17 +14,17 @@
 
 	let { mobileOpen = false, onClose }: SidebarProps = $props();
 
-	interface NavItem {
+	interface NavItemConfig {
 		label: string;
 		href: string;
-		icon: string;
+		icon: Component;
 	}
 
-	const navItems: NavItem[] = [
-		{ label: 'Dashboard', href: '/admin', icon: '📊' },
-		{ label: 'Publishers', href: '/admin/publishers', icon: '📰' },
-		{ label: 'Feeds', href: '/admin/feeds', icon: '📡' },
-		{ label: 'Stories', href: '/admin/stories', icon: '📄' }
+	const navItems: NavItemConfig[] = [
+		{ label: 'Dashboard', href: '/admin', icon: PhChartLineUpDuotone },
+		{ label: 'Publishers', href: '/admin/publishers', icon: PhNewspaperDuotone },
+		{ label: 'Feeds', href: '/admin/feeds', icon: PhRssSimpleDuotone },
+		{ label: 'Stories', href: '/admin/stories', icon: PhArticleDuotone }
 	];
 
 	function isActive(href: string): boolean {
@@ -44,15 +50,13 @@
 	<div class="sidebar__content">
 		<nav class="sidebar__nav">
 			{#each navItems as item}
-				<a
+				<NavItem
 					href={item.href}
-					class="sidebar__link"
-					class:sidebar__link--active={isActive(item.href)}
+					label={item.label}
+					icon={item.icon}
+					active={isActive(item.href)}
 					onclick={handleLinkClick}
-				>
-					<span class="sidebar__icon">{item.icon}</span>
-					<span class="sidebar__label">{item.label}</span>
-				</a>
+				/>
 			{/each}
 		</nav>
 	</div>
@@ -108,38 +112,6 @@
 			flex-direction: column;
 			gap: 0.25rem;
 			padding: 0 0.5rem;
-		}
-
-		&__link {
-			display: flex;
-			align-items: center;
-			gap: 0.75rem;
-			padding: 0.75rem 1rem;
-			color: #495057;
-			text-decoration: none;
-			border-radius: 4px;
-			transition: background 0.2s;
-
-			&:hover {
-				background: #e9ecef;
-			}
-
-			&--active {
-				background: #007bff;
-				color: #fff;
-
-				&:hover {
-					background: #0056b3;
-				}
-			}
-		}
-
-		&__icon {
-			font-size: 1.25rem;
-		}
-
-		&__label {
-			font-weight: 500;
 		}
 	}
 </style>
