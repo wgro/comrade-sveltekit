@@ -24,7 +24,9 @@ Comrade is a SvelteKit application that aggregates news content from Radio Free 
   library/API documentation. This means you should automatically use the Context7 MCP
   tools to resolve library id and get library docs without me having to explicitly ask
 - Use the Comrade and Sidequest MCP servers when working with database operations to introspect
-- Utilize BEM CSS naming
+- Utilize BEM CSS naming, and keep classes and ids short and simple
+- Do not use Tailwind
+- When asked to create frontend code, do very basic styling, because the user will redo it later anyway
 
 ## Architecture
 

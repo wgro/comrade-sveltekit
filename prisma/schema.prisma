@@ -7,25 +7,34 @@ datasource db {
   provider = "sqlite"
 }
 
-model Publisher {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  type      String   // 'primary' | 'competitor'
-  baseUrl   String
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Language {
+  id      String @id @default(cuid())
+  code    String @unique // ISO 639-1 or 639-3 code (e.g., 'en', 'uk', 'ru')
+  name    String // Native name (e.g., 'Українська')
+  name_en String // English name (e.g., 'Ukrainian')
 
-  feeds Feed[]
+  publishers Publisher[]
+}
+
+model Publisher {
+  id         String   @id @default(cuid())
+  name       String
+  slug       String   @unique
+  type       String // 'rferl' | 'competitor'
+  baseUrl    String
+  languageId String
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  language Language @relation(fields: [languageId], references: [id])
+  feeds    Feed[]
 }
 
 model Feed {
   id           String    @id @default(cuid())
   publisherId  String
   name         String
-  languageCode String
-  languageName String
   url          String
   active       Boolean   @default(true)
   lastPolledAt DateTime?
@@ -89,17 +98,17 @@ model Translation {
 model Summary {
   id              String    @id @default(cuid())
   storyId         String
-  translationId   String?   // Optional: link to specific translation
+  translationId   String? // Optional: link to specific translation
   summarizedTitle String?
   content         String
   status          String    @default("pending") // 'pending' | 'completed' | 'failed'
   errorMessage    String?
   // LLM metadata
-  modelName     String?
-  tokenCount    Int?
-  generatedAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  modelName       String?
+  tokenCount      Int?
+  generatedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
 

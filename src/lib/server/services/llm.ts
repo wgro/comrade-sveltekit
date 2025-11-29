@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type, type Schema } from '@google/genai';
+import { GoogleGenAI, type Schema } from '@google/genai';
 
 // Re-export Type and Schema for use in other services
 export { Type, type Schema } from '@google/genai';

@@ -16,7 +16,7 @@
   - feedsmith for RSS parsing
   - concurrently (dev dependency)
 
-- [ ] **Set up environment configuration**
+- [x] **Set up environment configuration**
   - Create `mise.local.toml` with GEMINI_API_KEY
   - Configure SvelteKit to load env vars
   - Create `.env.example` for documentation
@@ -73,10 +73,9 @@
 
 ## Phase 4: Background Jobs
 
-- [ ] **Set up Sidequest worker entry point**
-  - Create `worker/index.ts`
-  - Initialize Sidequest with mongo-backend
-  - Connect to MongoDB before starting
+- [x] **Set up Sidequest worker entry point in hooks.server.ts**
+  - Initialize Sidequest with SQLite backend
+  - Connect to SQLite before starting
 
 - [ ] **Implement PollFeedJob**
   - Fetch RSS for a single feed
