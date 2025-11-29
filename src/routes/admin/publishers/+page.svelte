@@ -1,4 +1,5 @@
 <script lang="ts">
+	import AdminPage from '$components/AdminPage.svelte';
 	import DataTable from '$components/DataTable.svelte';
 	import { getPublishers } from '$lib/api/publishers.remote';
 
@@ -19,19 +20,12 @@
 	];
 </script>
 
-<div class="admin-page">
-	<header class="admin-page__header">
-		<h1 class="admin-page__title">Publishers</h1>
-		<p class="admin-page__subtitle">Manage news publishers and organizations</p>
-	</header>
-
-	<div class="admin-page__content">
-		{#await getPublishers()}
-			<p>Loading...</p>
-		{:then publishers}
-			<DataTable {columns} data={publishers} emptyMessage="No publishers found" />
-		{:catch}
-			<p>Error loading publishers</p>
-		{/await}
-	</div>
-</div>
+<AdminPage title="Publishers" subtitle="Manage news publishers and organizations">
+	{#await getPublishers()}
+		<p>Loading...</p>
+	{:then publishers}
+		<DataTable {columns} data={publishers} emptyMessage="No publishers found" />
+	{:catch}
+		<p>Error loading publishers</p>
+	{/await}
+</AdminPage>

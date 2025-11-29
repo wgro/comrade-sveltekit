@@ -1,4 +1,5 @@
 <script lang="ts">
+	import AdminPage from '$components/AdminPage.svelte';
 	import DataTable from '$components/DataTable.svelte';
 	import { getStories } from '$lib/api/stories.remote';
 
@@ -31,19 +32,12 @@
 	];
 </script>
 
-<div class="admin-page">
-	<header class="admin-page__header">
-		<h1 class="admin-page__title">Stories</h1>
-		<p class="admin-page__subtitle">View and manage news stories and articles</p>
-	</header>
-
-	<div class="admin-page__content">
-		{#await getStories()}
-			<p>Loading...</p>
-		{:then stories}
-			<DataTable {columns} data={stories} emptyMessage="No stories found" />
-		{:catch}
-			<p>Error loading stories</p>
-		{/await}
-	</div>
-</div>
+<AdminPage title="Stories" subtitle="View and manage news stories and articles">
+	{#await getStories()}
+		<p>Loading...</p>
+	{:then stories}
+		<DataTable {columns} data={stories} emptyMessage="No stories found" />
+	{:catch}
+		<p>Error loading stories</p>
+	{/await}
+</AdminPage>

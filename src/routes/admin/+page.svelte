@@ -1,10 +1,7 @@
-<div class="admin-page">
-	<header class="admin-page__header">
-		<h1 class="admin-page__title">Admin Dashboard</h1>
-		<p class="admin-page__subtitle">Welcome to the Comrade admin panel</p>
-	</header>
+<script lang="ts">
+	import AdminPage from '$components/AdminPage.svelte';
+</script>
 
-	<div class="admin-page__content">
-		<p>Dashboard content will go here.</p>
-	</div>
-</div>
+<AdminPage title="Admin Dashboard" subtitle="Welcome to the Comrade admin panel">
+	<p>Dashboard content will go here.</p>
+</AdminPage>
