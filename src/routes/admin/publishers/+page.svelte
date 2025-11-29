@@ -1,51 +1,16 @@
 <script lang="ts">
 	import DataTable from '$components/DataTable.svelte';
-
-	interface Publisher {
-		id: string;
-		name: string;
-		slug: string;
-		type: string;
-		baseUrl: string;
-		language: string;
-		active: boolean;
-	}
-
-	const publishers: Publisher[] = [
-		{
-			id: '1',
-			name: 'Radio Free Europe/Radio Liberty - Central Newsroom',
-			slug: 'rferl-en',
-			type: 'primary',
-			baseUrl: 'https://www.rferl.org',
-			language: 'English',
-			active: true
-		},
-		{
-			id: '2',
-			name: 'Radio Free Europe/Radio Liberty - Ukrainian Service',
-			slug: 'rferl-uk',
-			type: 'primary',
-			baseUrl: 'https://www.radiosvoboda.org',
-			language: 'Ukrainian',
-			active: true
-		},
-		{
-			id: '3',
-			name: 'Radio Free Europe/Radio Liberty - Russian Service',
-			slug: 'rferl-ru',
-			type: 'primary',
-			baseUrl: 'https://www.svoboda.org',
-			language: 'Russian',
-			active: true
-		}
-	];
+	import { getPublishers } from '$lib/api/publishers.remote';
 
 	const columns = [
 		{ key: 'name', label: 'Name' },
 		{ key: 'slug', label: 'Slug' },
 		{ key: 'type', label: 'Type' },
-		{ key: 'language', label: 'Language' },
+		{
+			key: 'language',
+			label: 'Language',
+			render: (_: unknown, row: { language?: { name: string } }) => row.language?.name ?? ''
+		},
 		{
 			key: 'active',
 			label: 'Status',
@@ -61,6 +26,12 @@
 	</header>
 
 	<div class="admin-page__content">
-		<DataTable {columns} data={publishers} emptyMessage="No publishers found" />
+		{#await getPublishers()}
+			<p>Loading...</p>
+		{:then publishers}
+			<DataTable {columns} data={publishers} emptyMessage="No publishers found" />
+		{:catch}
+			<p>Error loading publishers</p>
+		{/await}
 	</div>
 </div>

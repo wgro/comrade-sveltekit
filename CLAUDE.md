@@ -27,6 +27,7 @@ Comrade is a SvelteKit application that aggregates news content from Radio Free 
 - Utilize BEM CSS naming, and keep classes and ids short and simple
 - Do not use Tailwind
 - When asked to create frontend code, do very basic styling, because the user will redo it later anyway
+- Do not run `bun run dev`
 
 ## Architecture
 
