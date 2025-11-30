@@ -3,12 +3,23 @@
 	import AdminPage from '$components/AdminPage.svelte';
 	import Button from '$components/Button.svelte';
 	import ButtonGroup from '$components/ButtonGroup.svelte';
+	import Modal from '$components/Modal.svelte';
 	import { getPublisher, getPublisherStories } from '$lib/api/publishers.remote';
 	import PhPencilLineDuotone from '~icons/ph/pencil-line-duotone';
 	import PhTrashDuotone from '~icons/ph/trash-duotone';
 
 	const id = $derived(page.params.id!);
 	const publisherPromise = $derived(getPublisher(id));
+
+	let editModalOpen = $state(false);
+
+	function openEditModal(): void {
+		editModalOpen = true;
+	}
+
+	function closeEditModal(): void {
+		editModalOpen = false;
+	}
 </script>
 
 {#await publisherPromise}
@@ -50,7 +61,7 @@
 				</dl>
 
 			<ButtonGroup>
-				<Button>
+				<Button onclick={openEditModal}>
 					{#snippet icon()}
 						<PhPencilLineDuotone />
 					{/snippet}
@@ -63,6 +74,10 @@
 					Delete
 				</Button>
 			</ButtonGroup>
+
+			<Modal open={editModalOpen} title="Edit Publisher" onClose={closeEditModal}>
+				<p>Edit form coming soon</p>
+			</Modal>
 			</section>
 
 			<section class="feeds">
