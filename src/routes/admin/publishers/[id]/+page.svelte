@@ -1,17 +1,26 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import AdminPage from '$components/AdminPage.svelte';
+	import Button from '$components/Button.svelte';
+	import ButtonGroup from '$components/ButtonGroup.svelte';
 	import { getPublisher, getPublisherStories } from '$lib/api/publishers.remote';
+	import PhPencilLineDuotone from '~icons/ph/pencil-line-duotone';
+	import PhTrashDuotone from '~icons/ph/trash-duotone';
 
 	const id = $derived(page.params.id!);
+	const publisherPromise = $derived(getPublisher(id));
 </script>
 
-<AdminPage title="Publisher Details" subtitle="View publisher information, feeds, and stories">
-	<p><a href="/admin/publishers" class="back">&larr; Back to Publishers</a></p>
-
-	{#await getPublisher(id)}
+{#await publisherPromise}
+	<AdminPage title="Publisher Details" subtitle="View publisher information, feeds, and stories">
 		<p>Loading publisher...</p>
-	{:then publisher}
+	</AdminPage>
+{:then publisher}
+	<AdminPage
+		title="Publisher Details"
+		subtitle="View publisher information, feeds, and stories"
+		lastBreadcrumbSegment={publisher?.name}
+	>
 		{#if !publisher}
 			<p class="error">Publisher not found</p>
 		{:else}
@@ -39,6 +48,21 @@
 					<dt>Created</dt>
 					<dd>{new Date(publisher.createdAt).toLocaleDateString()}</dd>
 				</dl>
+
+			<ButtonGroup>
+				<Button>
+					{#snippet icon()}
+						<PhPencilLineDuotone />
+					{/snippet}
+					Edit
+				</Button>
+				<Button variant="danger">
+					{#snippet icon()}
+						<PhTrashDuotone />
+					{/snippet}
+					Delete
+				</Button>
+			</ButtonGroup>
 			</section>
 
 			<section class="feeds">
@@ -135,20 +159,15 @@
 				{/await}
 			</section>
 		{/if}
-	{:catch}
+	</AdminPage>
+{:catch}
+	<AdminPage title="Publisher Details" subtitle="View publisher information, feeds, and stories">
 		<p class="error">Error loading publisher</p>
-	{/await}
-</AdminPage>
+	</AdminPage>
+{/await}
 
-<style>
-	.back {
-		color: #0066cc;
-		text-decoration: none;
-	}
-
-	.back:hover {
-		text-decoration: underline;
-	}
+<style lang="scss">
+	@use '$styles/colors' as *;
 
 	section {
 		margin-bottom: 2rem;
@@ -158,18 +177,17 @@
 		font-size: 1.25rem;
 		font-weight: 600;
 		margin-bottom: 1rem;
-		color: #333;
 	}
 
 	dl {
 		display: grid;
-		grid-template-columns: 120px 1fr;
+		grid-template-columns: 120px 1fr 120px 1fr;
 		gap: 0.5rem 1rem;
 	}
 
 	dt {
 		font-weight: 600;
-		color: #666;
+		color: $color-stone-4;
 	}
 
 	dd {
@@ -186,18 +204,18 @@
 		text-align: left;
 		padding: 0.75rem 1rem;
 		font-weight: 600;
-		color: #495057;
-		border-bottom: 2px solid #dee2e6;
-		background: #f8f9fa;
+		color: $color-stone-5;
+		border-bottom: 2px solid $color-stone-2;
+		background: $color-stone-0;
 	}
 
 	td {
 		padding: 0.75rem 1rem;
-		border-bottom: 1px solid #e9ecef;
+		border-bottom: 1px solid $color-stone-2;
 	}
 
 	tr:hover {
-		background: #f8f9fa;
+		background: $color-stone-0;
 	}
 
 	.url,
@@ -208,21 +226,12 @@
 		white-space: nowrap;
 	}
 
-	a {
-		color: #0066cc;
-		text-decoration: none;
-	}
-
-	a:hover {
-		text-decoration: underline;
-	}
-
 	.empty {
-		color: #6c757d;
+		color: $color-stone-4;
 		font-style: italic;
 	}
 
 	.error {
-		color: #dc3545;
+		color: $color-chili-5;
 	}
 </style>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Avatar from './Avatar.svelte';
-	import Breadcrumbs from './Breadcrumbs.svelte';
+
 
 	interface NavbarProps {
 		onToggleSidebar?: () => void;
@@ -29,7 +29,7 @@
 		</a>
 	</div>
 
-	<Breadcrumbs />
+
 
 	<div class="navbar__right">
 		<Avatar />

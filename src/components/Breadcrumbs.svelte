@@ -1,13 +1,19 @@
 <script lang="ts">
 	import { page } from '$app/state';
 
+	interface Props {
+		lastBreadcrumbSegment?: string;
+	}
+
+	let { lastBreadcrumbSegment }: Props = $props();
+
 	// Generate breadcrumbs from current path
 	const breadcrumbs = $derived(() => {
 		const path = page.url.pathname;
 		const segments = path.split('/').filter(Boolean);
 
 		return segments.map((segment, index) => ({
-			label: segment.charAt(0).toUpperCase() + segment.slice(1),
+			label: index === segments.length - 1 && lastBreadcrumbSegment ? lastBreadcrumbSegment : segment.charAt(0).toUpperCase() + segment.slice(1),
 			href: '/' + segments.slice(0, index + 1).join('/')
 		}));
 	});
@@ -25,12 +31,18 @@
 </div>
 
 <style lang="scss">
+	@use '$styles/colors' as *;
+
 	.breadcrumbs {
-		display: flex;
+		display: inline-flex;
 		align-items: center;
 		gap: 0.5rem;
 		flex: 1;
-		margin: 0 2rem;
+		background: $color-ivory;
+		padding: 0.25rem 1rem;
+		border-radius: 0.25rem;
+		margin-bottom: 1rem;
+
 
 		@media (max-width: 768px) {
 			display: none;
