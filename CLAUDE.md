@@ -17,8 +17,10 @@ Comrade is a SvelteKit application that aggregates news content from Radio Free 
 ## Guidelines
 
 - Use `bun` instead of `npm`
+- Use the "Comrade SQLite Server" to introspect the SQLite database
 - Use the Svelte MCP server to reference Svelte and SvelteKit docs
 - Prefer experimental SvelteKit remote functions instead of "load" functions
+- Check Context7 MCP for SvelteKit remote functions documentation
 - Put remote functions in src/lib/api, and remember they must have a .remote.ts ending
 - Always use context7 when I need code generation, setup or configuration steps, or
   library/API documentation. This means you should automatically use the Context7 MCP

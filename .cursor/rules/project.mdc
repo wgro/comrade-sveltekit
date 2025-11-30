@@ -11,8 +11,8 @@ Comrade is a SvelteKit application that aggregates news content from Radio Free 
 ## Tech Stack
 
 - **Framework**: SvelteKit with TypeScript (strict mode)
-- **Database**: MongoDB with Mongoose ODM
-- **Background Jobs**: Sidequest with `@sidequest/mongo-backend`
+- **Database**: SQLite with Prisma ORM
+- **Background Jobs**: Sidequest with `@sidequest/sqlite-backend`
 - **LLM Provider**: Google Gemini (for translation and summarization)
 - **Content Extraction**: Mozilla Readability (`@mozilla/readability`) + jsdom
 - **Deployment**: Single VPS running SvelteKit (Node adapter) + Sidequest worker as separate processes
@@ -20,13 +20,19 @@ Comrade is a SvelteKit application that aggregates news content from Radio Free 
 ## Guidelines
 
 - Use `bun` instead of `npm`
-- Use the MongoDB MCP server to introspect the DB when necessary
+- Use the "Comrade SQLite Server" to introspect the SQLite database
 - Use the Svelte MCP server to reference Svelte and SvelteKit docs
 - Prefer experimental SvelteKit remote functions instead of "load" functions
+- Check Context7 MCP for SvelteKit remote functions documentation
 - Put remote functions in src/lib/api, and remember they must have a .remote.ts ending
 - Always use context7 when I need code generation, setup or configuration steps, or
   library/API documentation. This means you should automatically use the Context7 MCP
-  tools to resolve library id and get library docs without me having to explicitly ask.
+  tools to resolve library id and get library docs without me having to explicitly ask
+- Use the Comrade and Sidequest MCP servers when working with database operations to introspect
+- Utilize BEM CSS naming, and keep classes and ids short and simple
+- Do not use Tailwind
+- When asked to create frontend code, do very basic styling, because the user will redo it later anyway
+- Do not run `bun run dev`
 
 ## Architecture
 
@@ -35,10 +41,7 @@ Comrade is a SvelteKit application that aggregates news content from Radio Free 
 1. **SvelteKit App** (`npm run dev`) - Web UI, API routes, job enqueuing
 2. **Sidequest Worker** (`npm run dev:worker`) - Background job processing
 
-Both processes share:
-
-- MongoDB connection
-- Domain code in `src/lib/server/`
+Both processes share domain code in `src/lib/server/`.
 
 ### Job Pipeline
 
@@ -107,15 +110,7 @@ Key fields:
 
 - Strict mode enabled
 - Explicit return types on all functions
-- Interface names prefixed with `I` for Mongoose documents (e.g., `IStory`)
 - Use `unknown` over `any`, narrow with type guards
-
-### Mongoose
-
-- Models in `src/lib/server/db/models/`
-- Each model file exports interface and model
-- Use `lean()` for read-only queries (performance)
-- Populate references explicitly, avoid deep nesting
 
 ### Sidequest Jobs
 
@@ -127,7 +122,6 @@ Key fields:
 ### Services
 
 - Pure functions where possible
-- Services don't import Mongoose models directly; receive data as arguments
 - Extraction service uses strategy pattern for future publisher-specific extractors
 
 ### Error Handling
@@ -139,7 +133,6 @@ Key fields:
 ## Environment Variables
 
 ```
-MONGODB_URI=mongodb://localhost:27017/comrade
 GEMINI_API_KEY=your-api-key
 NODE_ENV=development
 ```
@@ -149,8 +142,7 @@ NODE_ENV=development
 ```json
 {
 	"sidequest": "latest",
-	"@sidequest/mongo-backend": "latest",
-	"mongoose": "^8.x",
+	"@sidequest/sqlite-backend": "latest",
 	"@mozilla/readability": "^0.5.x",
 	"jsdom": "^24.x",
 	"@google/generative-ai": "latest",

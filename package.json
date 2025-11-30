@@ -17,6 +17,7 @@
 		"test:e2e": "playwright test",
 		"db:generate": "prisma generate",
 		"db:push": "prisma db push",
+		"db:push:force": "prisma db push --accept-data-loss",
 		"db:studio": "prisma studio",
 		"db:seed": "bun run scripts/seed.ts"
 	},
@@ -28,8 +29,10 @@
 		"@sveltejs/adapter-node": "^5.4.0",
 		"@sveltejs/kit": "^2.49.0",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
+		"@types/better-sqlite3": "^7.6.13",
 		"@types/jsdom": "^27.0.0",
 		"@types/node": "^24.10.1",
+		"better-sqlite3": "^12.5.0",
 		"eslint": "^9.39.1",
 		"eslint-plugin-svelte": "^3.13.0",
 		"globals": "^16.5.0",
