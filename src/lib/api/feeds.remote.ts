@@ -21,3 +21,11 @@ export const getFeeds = query(async () => {
 	});
 	return feeds;
 });
+
+export const previewFeed = query(z.string().url(), async (feedUrl) => {
+	const response = await fetch(feedUrl);
+	if (!response.ok) {
+		throw new Error(`Failed to fetch feed: HTTP ${response.status}`);
+	}
+	return await response.text();
+});

@@ -58,7 +58,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(0, 0, 0, 0.5);
+		background: rgba($color-teal, 0.6);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -68,11 +68,11 @@
 	.modal__container {
 		background: white;
 		border-radius: 8px;
-		width: 500px;
+		width: 600px;
 		max-width: 90vw;
 		max-height: 90vh;
 		overflow: auto;
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+		box-shadow: 0 4px 20px rgba($color-teal, 0.15);
 	}
 
 	.modal__header {

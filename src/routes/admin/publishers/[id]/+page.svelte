@@ -10,8 +10,63 @@
 		getLanguages,
 		updatePublisher
 	} from '$lib/api/publishers.remote';
+	import { previewFeed } from '$lib/api/feeds.remote';
+	import ActionButton from '$components/ActionButton.svelte';
 	import PhPencilLineDuotone from '~icons/ph/pencil-line-duotone';
 	import PhTrashDuotone from '~icons/ph/trash-duotone';
+import PhArrowsClockwiseDuotone from '~icons/ph/arrows-clockwise-duotone';
+import PhEyeDuotone from '~icons/ph/eye-duotone';
+import SvgSpinners90RingWithBg from '~icons/svg-spinners/90-ring-with-bg';
+import Highlight, { LineNumbers } from 'svelte-highlight';
+import xml from 'svelte-highlight/languages/xml';
+import github from 'svelte-highlight/styles/github';
+
+interface Feed {
+	id: string;
+	name: string;
+	url: string;
+	active: boolean;
+	lastPolledAt: string | Date | null;
+	lastError: string | null;
+	_count: { stories: number };
+}
+
+	let previewModalOpen = $state(false);
+	let selectedFeed: Feed | null = $state(null);
+	let previewContent: string | null = $state(null);
+	let previewLoading = $state(false);
+	let previewError: string | null = $state(null);
+
+	function handleEditFeed(feed: Feed): void {
+		// TODO: implement edit action
+	}
+
+	function handleRequeueFeed(feed: Feed): void {
+		// TODO: implement requeue action
+	}
+
+	async function handlePreviewFeed(feed: Feed): Promise<void> {
+		selectedFeed = feed;
+		previewModalOpen = true;
+		previewLoading = true;
+		previewError = null;
+		previewContent = null;
+
+		try {
+			previewContent = await previewFeed(feed.url);
+		} catch (error) {
+			previewError = error instanceof Error ? error.message : 'Failed to fetch feed';
+		} finally {
+			previewLoading = false;
+		}
+	}
+
+	function closePreviewModal(): void {
+		previewModalOpen = false;
+		selectedFeed = null;
+		previewContent = null;
+		previewError = null;
+	}
 
 	const id = $derived(page.params.id!);
 	const publisherPromise = $derived(getPublisher(id));
@@ -43,6 +98,10 @@
 		editModalOpen = false;
 	}
 </script>
+
+<svelte:head>
+	{@html github}
+</svelte:head>
 
 {#await publisherPromise}
 	<AdminPage title="Publisher Details" subtitle="View publisher information, feeds, and stories">
@@ -188,6 +247,7 @@
 								<th>Stories</th>
 								<th>Last Polled</th>
 								<th>Status</th>
+								<th>Actions</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -203,6 +263,23 @@
 										{:else}
 											{feed.active ? 'Active' : 'Inactive'}
 										{/if}
+									</td>
+									<td class="actions">
+										<ActionButton
+											icon={PhPencilLineDuotone}
+											title="Edit feed"
+											onclick={() => handleEditFeed(feed)}
+										/>
+										<ActionButton
+											icon={PhArrowsClockwiseDuotone}
+											title="Requeue feed"
+											onclick={() => handleRequeueFeed(feed)}
+										/>
+										<ActionButton
+											icon={PhEyeDuotone}
+											title="Preview feed"
+											onclick={() => handlePreviewFeed(feed)}
+										/>
 									</td>
 								</tr>
 							{/each}
@@ -275,6 +352,23 @@
 		<p class="error">Error loading publisher</p>
 	</AdminPage>
 {/await}
+
+<Modal open={previewModalOpen} title={selectedFeed?.name ?? 'Feed Preview'} onClose={closePreviewModal}>
+	{#if previewLoading}
+		<div class="preview-loading">
+			<SvgSpinners90RingWithBg />
+			<span>Loading feed...</span>
+		</div>
+	{:else if previewError}
+		<div class="preview-error">{previewError}</div>
+	{:else if previewContent}
+		<div class="preview-content">
+			<Highlight language={xml} code={previewContent} let:highlighted>
+				<LineNumbers {highlighted} wrapLines />
+			</Highlight>
+		</div>
+	{/if}
+</Modal>
 
 <style lang="scss">
 	@use '$styles/colors' as *;
@@ -407,8 +501,34 @@
 	}
 
 	.actions {
-		margin-top: 0.5rem;
 		display: flex;
+		gap: 0.25rem;
+	}
+
+	.edit-form .actions {
+		margin-top: 0.5rem;
 		justify-content: flex-end;
+	}
+
+	.preview-loading {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		padding: 2rem;
+		color: $color-stone-5;
+	}
+
+	.preview-error {
+		padding: 1rem;
+		color: $color-chili-5;
+		background: $color-chili-0;
+		border-radius: 4px;
+	}
+
+	.preview-content {
+		max-height: 60vh;
+		overflow: auto;
+		font-size: 0.75rem;
 	}
 </style>
