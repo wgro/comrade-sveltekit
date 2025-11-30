@@ -5,13 +5,14 @@
 		children: Snippet;
 		icon?: Snippet;
 		variant?: 'default' | 'danger';
+		type?: 'button' | 'submit' | 'reset';
 		onclick?: () => void;
 	}
 
-	let { children, icon, variant = 'default', onclick }: Props = $props();
+	let { children, icon, variant = 'default', type = 'button', onclick }: Props = $props();
 </script>
 
-<button class="btn btn--{variant}" {onclick}>
+<button class="btn btn--{variant}" {type} {onclick}>
 	{#if icon}
 		<span class="btn__icon">
 			{@render icon()}

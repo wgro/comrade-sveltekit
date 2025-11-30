@@ -4,7 +4,12 @@
 	import Button from '$components/Button.svelte';
 	import ButtonGroup from '$components/ButtonGroup.svelte';
 	import Modal from '$components/Modal.svelte';
-	import { getPublisher, getPublisherStories } from '$lib/api/publishers.remote';
+	import {
+		getPublisher,
+		getPublisherStories,
+		getLanguages,
+		updatePublisher
+	} from '$lib/api/publishers.remote';
 	import PhPencilLineDuotone from '~icons/ph/pencil-line-duotone';
 	import PhTrashDuotone from '~icons/ph/trash-duotone';
 
@@ -13,7 +18,24 @@
 
 	let editModalOpen = $state(false);
 
-	function openEditModal(): void {
+	function openEditModal(publisher: {
+		id: string;
+		name: string;
+		slug: string;
+		type: string;
+		baseUrl: string;
+		languageId: string;
+		active: boolean;
+	}): void {
+		updatePublisher.fields.set({
+			id: publisher.id,
+			name: publisher.name,
+			slug: publisher.slug,
+			type: publisher.type as 'rferl' | 'competitor',
+			baseUrl: publisher.baseUrl,
+			languageId: publisher.languageId,
+			active: publisher.active
+		});
 		editModalOpen = true;
 	}
 
@@ -61,7 +83,7 @@
 				</dl>
 
 			<ButtonGroup>
-				<Button onclick={openEditModal}>
+				<Button onclick={() => openEditModal(publisher)}>
 					{#snippet icon()}
 						<PhPencilLineDuotone />
 					{/snippet}
@@ -76,7 +98,80 @@
 			</ButtonGroup>
 
 			<Modal open={editModalOpen} title="Edit Publisher" onClose={closeEditModal}>
-				<p>Edit form coming soon</p>
+				<form
+					{...updatePublisher.enhance(async ({ submit }) => {
+						try {
+							await submit();
+							closeEditModal();
+						} catch (error) {
+							console.error('Form submission error:', error);
+						}
+					})}
+					class="edit-form"
+				>
+					<input type="hidden" name="id" value={updatePublisher.fields.id.value()} />
+
+					<div class="field">
+						<label for="name">Name</label>
+						<input id="name" {...updatePublisher.fields.name.as('text')} />
+						{#each updatePublisher.fields.name.issues() as issue}
+							<span class="field-error">{issue.message}</span>
+						{/each}
+					</div>
+
+					<div class="field">
+						<label for="slug">Slug</label>
+						<input id="slug" {...updatePublisher.fields.slug.as('text')} />
+						{#each updatePublisher.fields.slug.issues() as issue}
+							<span class="field-error">{issue.message}</span>
+						{/each}
+					</div>
+
+					<div class="field">
+						<label for="type">Type</label>
+						<select id="type" {...updatePublisher.fields.type.as('select')}>
+							<option value="rferl">RFE/RL</option>
+							<option value="competitor">Competitor</option>
+						</select>
+						{#each updatePublisher.fields.type.issues() as issue}
+							<span class="field-error">{issue.message}</span>
+						{/each}
+					</div>
+
+					<div class="field">
+						<label for="baseUrl">Base URL</label>
+						<input id="baseUrl" {...updatePublisher.fields.baseUrl.as('url')} />
+						{#each updatePublisher.fields.baseUrl.issues() as issue}
+							<span class="field-error">{issue.message}</span>
+						{/each}
+					</div>
+
+					<div class="field">
+						<label for="languageId">Language</label>
+						<select id="languageId" {...updatePublisher.fields.languageId.as('select')}>
+							<option value="">Select a language</option>
+							{#await getLanguages() then languages}
+								{#each languages as language (language.id)}
+									<option value={language.id}>{language.name_en} ({language.code})</option>
+								{/each}
+							{/await}
+						</select>
+						{#each updatePublisher.fields.languageId.issues() as issue}
+							<span class="field-error">{issue.message}</span>
+						{/each}
+					</div>
+
+					<div class="field field--checkbox">
+						<label>
+							<input {...updatePublisher.fields.active.as('checkbox')} />
+							Active
+						</label>
+					</div>
+
+					<div class="actions">
+						<Button type="submit">Save Changes</Button>
+					</div>
+				</form>
 			</Modal>
 			</section>
 
@@ -248,5 +343,72 @@
 
 	.error {
 		color: $color-chili-5;
+	}
+
+	.edit-form {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+
+		label {
+			font-weight: 600;
+			font-size: 0.875rem;
+			color: $color-stone-6;
+		}
+
+		input,
+		select {
+			padding: 0.5rem 0.75rem;
+			border: 1px solid $color-stone-3;
+			border-radius: 4px;
+			font-size: 0.875rem;
+
+			&:focus {
+				outline: none;
+				border-color: $color-teal-5;
+			}
+
+			&[aria-invalid='true'] {
+				border-color: $color-chili-5;
+			}
+		}
+
+		select {
+			background: white;
+		}
+	}
+
+	.field--checkbox {
+		flex-direction: row;
+		align-items: center;
+
+		label {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			font-weight: 400;
+			cursor: pointer;
+		}
+
+		input {
+			width: auto;
+		}
+	}
+
+	.field-error {
+		color: $color-chili-5;
+		font-size: 0.75rem;
+	}
+
+	.actions {
+		margin-top: 0.5rem;
+		display: flex;
+		justify-content: flex-end;
 	}
 </style>

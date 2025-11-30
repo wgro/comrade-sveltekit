@@ -1,4 +1,4 @@
-import { query } from '$app/server';
+import { query, form } from '$app/server';
 import { z } from 'zod';
 import { prisma } from '$lib/server/db/connection';
 
@@ -56,3 +56,30 @@ export const getPublisherStories = query(z.string(), async (publisherId) => {
 	});
 	return stories;
 });
+
+export const getLanguages = query(async () => {
+	const languages = await prisma.language.findMany({
+		orderBy: { name_en: 'asc' }
+	});
+	return languages;
+});
+
+export const updatePublisher = form(
+	z.object({
+		id: z.string(),
+		name: z.string().min(1, 'Name is required'),
+		slug: z.string().min(1, 'Slug is required'),
+		type: z.enum(['rferl', 'competitor']),
+		baseUrl: z.string().url('Must be a valid URL'),
+		languageId: z.string().min(1, 'Language is required'),
+		active: z.boolean().optional().default(false)
+	}),
+	async (data) => {
+		const { id, ...updateData } = data;
+		await prisma.publisher.update({
+			where: { id },
+			data: updateData
+		});
+		await getPublisher(id).refresh();
+	}
+);
