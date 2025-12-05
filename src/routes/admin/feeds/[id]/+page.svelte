@@ -8,8 +8,10 @@
 	import {
 		getFeed,
 		updateFeed,
-		addFeedExclusion,
-		removeFeedExclusion,
+		addFeedCategoryExclusion,
+		removeFeedCategoryExclusion,
+		addFeedStoryExclusion,
+		removeFeedStoryExclusion,
 		type FeedDetail
 	} from '$lib/api/feeds.remote';
 	import PhPencilLineDuotone from '~icons/ph/pencil-line-duotone';
@@ -25,8 +27,7 @@
 	let editModalOpen = $state(false);
 
 	const id = $derived(page.params.id!);
-	const feedPromise = $derived(getFeed(id));
-
+	const feedPromise: Promise<FeedDetail | null> = $derived(getFeed(id));
 
 	function openEditModal(feed: FeedDetail): void {
 		updateFeed.fields.set({
@@ -155,7 +156,7 @@
 						<div class="field">
 							<label for="name">Name</label>
 							<input id="name" {...updateFeed.fields.name.as('text')} />
-							{#each updateFeed.fields.name.issues() as issue}
+							{#each updateFeed.fields.name.issues() as issue (issue.message)}
 								<span class="field-error">{issue.message}</span>
 							{/each}
 						</div>
@@ -163,7 +164,7 @@
 						<div class="field">
 							<label for="url">URL</label>
 							<input id="url" {...updateFeed.fields.url.as('url')} />
-							{#each updateFeed.fields.url.issues() as issue}
+							{#each updateFeed.fields.url.issues() as issue (issue.message)}
 								<span class="field-error">{issue.message}</span>
 							{/each}
 						</div>
@@ -173,7 +174,7 @@
 							<select id="type" {...updateFeed.fields.type.as('select')}>
 								<option value="rss">RSS</option>
 							</select>
-							{#each updateFeed.fields.type.issues() as issue}
+							{#each updateFeed.fields.type.issues() as issue (issue.message)}
 								<span class="field-error">{issue.message}</span>
 							{/each}
 						</div>
@@ -192,57 +193,114 @@
 				</Modal>
 			</section>
 
-			<section class="exclusions">
-				<h2>Category Exclusions</h2>
-				<p class="help">Items with these categories will be skipped during feed polling.</p>
+			<div class="exclusions-grid">
+				<section class="exclusions">
+					<h2>Category Exclusions</h2>
+					<p class="help">Items with these categories will be skipped during feed polling.</p>
 
-				{#if feed.exclusions.length > 0}
-					<div class="tags">
-						{#each feed.exclusions as exclusion}
-							{@const remove = removeFeedExclusion.for(exclusion.id)}
-							<form class="tag" {...remove.enhance(async ({ submit }) => submit())}>
-								<input type="hidden" name="id" value={exclusion.id} />
-								<span>{exclusion.category}</span>
-								<button
-									type="submit"
-									class="tag__remove"
-									disabled={!!remove.pending}
-									aria-label="Remove {exclusion.category}"
-								>
-									<PhXCircleDuotone />
-								</button>
-							</form>
-						{/each}
-					</div>
-				{:else}
-					<p class="empty">No exclusions configured.</p>
-				{/if}
+					{#if feed.categoryExclusions.length > 0}
+						<div class="tags">
+							{#each feed.categoryExclusions as exclusion (exclusion.id)}
+								{@const remove = removeFeedCategoryExclusion.for(exclusion.id)}
+								<form class="tag" {...remove.enhance(async ({ submit }) => submit())}>
+									<input type="hidden" name="id" value={exclusion.id} />
+									<span>{exclusion.category}</span>
+									<button
+										type="submit"
+										class="tag__remove"
+										disabled={!!remove.pending}
+										aria-label="Remove {exclusion.category}"
+									>
+										<PhXCircleDuotone />
+									</button>
+								</form>
+							{/each}
+						</div>
+					{:else}
+						<p class="empty">No exclusions configured.</p>
+					{/if}
 
-				{#if feed}
-					{@const add = addFeedExclusion.for(feed.id)}
-					<form
-						class="add-exclusion"
-						{...add.enhance(async ({ form, submit }) => {
-							await submit();
-							form.reset();
-						})}
-					>
-						<input type="hidden" name="feedId" value={feed.id} />
-						<input
-							type="text"
-							name="category"
-							placeholder="Category to exclude..."
-							required
-						/>
-						<Button type="submit" disabled={!!add.pending}>
-							{#snippet icon()}
-								<PhPlusDuotone />
-							{/snippet}
-							Add
-						</Button>
-					</form>
-				{/if}
-			</section>
+					{#if feed}
+						{@const add = addFeedCategoryExclusion.for(feed.id)}
+						<form
+							class="add-exclusion"
+							{...add.enhance(async ({ form, submit }) => {
+								await submit();
+								form.reset();
+							})}
+						>
+							<input type="hidden" name="feedId" value={feed.id} />
+							<input type="text" name="category" placeholder="Category to exclude..." required />
+							<Button type="submit" disabled={!!add.pending}>
+								{#snippet icon()}
+									<PhPlusDuotone />
+								{/snippet}
+								Add
+							</Button>
+						</form>
+					{/if}
+				</section>
+
+				<section class="exclusions">
+					<h2>Story Exclusions</h2>
+					<p class="help">
+						Stories matching these rules will be skipped during content extraction.
+					</p>
+
+					{#if feed.storyExclusions.length > 0}
+						<div class="tags">
+							{#each feed.storyExclusions as exclusion (exclusion.id)}
+								{@const remove = removeFeedStoryExclusion.for(exclusion.id)}
+								<form class="tag" {...remove.enhance(async ({ submit }) => submit())}>
+									<input type="hidden" name="id" value={exclusion.id} />
+									<span class="tag__rule"
+										>{exclusion.ruleType === 'og_type' ? 'og:type' : '@type'}</span
+									>
+									<span>{exclusion.value}</span>
+									{#if exclusion.description}
+										<span class="tag__desc" title={exclusion.description}>ℹ</span>
+									{/if}
+									<button
+										type="submit"
+										class="tag__remove"
+										disabled={!!remove.pending}
+										aria-label="Remove {exclusion.value}"
+									>
+										<PhXCircleDuotone />
+									</button>
+								</form>
+							{/each}
+						</div>
+					{:else}
+						<p class="empty">No story exclusions configured.</p>
+					{/if}
+
+					{#if feed}
+						{@const add = addFeedStoryExclusion.for(feed.id)}
+						<form
+							class="add-story-exclusion"
+							{...add.enhance(async ({ form, submit }) => {
+								await submit();
+								form.reset();
+							})}
+						>
+							<input type="hidden" name="feedId" value={feed.id} />
+							<select name="ruleType" required>
+								<option value="og_type">og:type</option>
+								<option value="json_ld_type">JSON-LD @type</option>
+							</select>
+							<input type="text" name="value" placeholder="Value to match..." required />
+							<input type="text" name="description" placeholder="Note (optional)" />
+							<Button type="submit" disabled={!!add.pending}>
+								{#snippet icon()}
+									<PhPlusDuotone />
+								{/snippet}
+								Add
+							</Button>
+						</form>
+					{/if}
+				</section>
+			</div>
 		{/if}
 	</AdminPage>
 {:catch}
@@ -258,6 +316,12 @@
 
 	section {
 		margin-bottom: 2rem;
+	}
+
+	.exclusions-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 2rem;
 	}
 
 	h2 {
@@ -418,5 +482,48 @@
 				border-color: $color-teal-5;
 			}
 		}
+	}
+
+	.add-story-exclusion {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+		flex-wrap: wrap;
+
+		select,
+		input {
+			padding: 0.5rem 0.75rem;
+			border: 1px solid $color-stone-3;
+			border-radius: 4px;
+			font-size: 0.875rem;
+
+			&:focus {
+				outline: none;
+				border-color: $color-teal-5;
+			}
+		}
+
+		select {
+			background: white;
+		}
+
+		input[name='value'] {
+			width: 200px;
+		}
+
+		input[name='description'] {
+			width: 200px;
+		}
+	}
+
+	.tag__rule {
+		font-size: 0.75rem;
+		color: $color-stone-5;
+		font-family: monospace;
+	}
+
+	.tag__desc {
+		cursor: help;
+		color: $color-stone-4;
 	}
 </style>

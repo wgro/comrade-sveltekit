@@ -36,20 +36,22 @@ model Feed {
   name         String
   url          String
   type         String    @default("rss") // 'rss'
+  contentType  String    @default("text")
   active       Boolean   @default(true)
   lastPolledAt DateTime?
   lastError    String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  publisher  Publisher       @relation(fields: [publisherId], references: [id], onDelete: Cascade)
-  stories    Story[]
-  exclusions FeedExclusion[]
+  publisher           Publisher               @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  stories             Story[]
+  categoryExclusions  FeedCategoryExclusion[]
+  storyExclusions     FeedStoryExclusion[]
 
   @@unique([publisherId, url])
 }
 
-model FeedExclusion {
+model FeedCategoryExclusion {
   id        String   @id @default(cuid())
   feedId    String
   category  String
@@ -58,6 +60,21 @@ model FeedExclusion {
   feed Feed @relation(fields: [feedId], references: [id], onDelete: Cascade)
 
   @@unique([feedId, category])
+  @@index([feedId])
+}
+
+model FeedStoryExclusion {
+  id          String   @id @default(cuid())
+  feedId      String
+  ruleType    String // 'og_type' | 'json_ld_type'
+  value       String
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  feed Feed @relation(fields: [feedId], references: [id], onDelete: Cascade)
+
+  @@unique([feedId, ruleType, value])
   @@index([feedId])
 }
 

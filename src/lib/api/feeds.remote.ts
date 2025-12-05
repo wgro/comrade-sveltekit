@@ -30,8 +30,8 @@ export const previewFeed = query(z.string().url(), async (feedUrl) => {
 	return await response.text();
 });
 
-export const getFeedExclusions = query(z.string(), async (feedId) => {
-	const exclusions = await prisma.feedExclusion.findMany({
+export const getFeedCategoryExclusions = query(z.string(), async (feedId) => {
+	const exclusions = await prisma.feedCategoryExclusion.findMany({
 		where: { feedId },
 		select: { category: true }
 	});
@@ -43,7 +43,8 @@ export const getFeed = query(z.string(), async (id) => {
 		where: { id },
 		include: {
 			publisher: { include: { language: true } },
-			exclusions: { orderBy: { category: 'asc' } },
+			categoryExclusions: { orderBy: { category: 'asc' } },
+			storyExclusions: { orderBy: { createdAt: 'asc' } },
 			_count: { select: { stories: true } }
 		}
 	});
@@ -67,13 +68,13 @@ export const updateFeed = form(
 	}
 );
 
-export const addFeedExclusion = form(
+export const addFeedCategoryExclusion = form(
 	z.object({
 		feedId: z.string(),
 		category: z.string().min(1, 'Category is required')
 	}),
 	async (data) => {
-		await prisma.feedExclusion.create({
+		await prisma.feedCategoryExclusion.create({
 			data: {
 				feedId: data.feedId,
 				category: data.category.trim()
@@ -83,12 +84,44 @@ export const addFeedExclusion = form(
 	}
 );
 
-export const removeFeedExclusion = form(
+export const removeFeedCategoryExclusion = form(
 	z.object({
 		id: z.string()
 	}),
 	async (data) => {
-		const exclusion = await prisma.feedExclusion.delete({
+		const exclusion = await prisma.feedCategoryExclusion.delete({
+			where: { id: data.id }
+		});
+		await getFeed(exclusion.feedId).refresh();
+	}
+);
+
+export const addFeedStoryExclusion = form(
+	z.object({
+		feedId: z.string(),
+		ruleType: z.enum(['og_type', 'json_ld_type']),
+		value: z.string().min(1, 'Value is required'),
+		description: z.string().optional()
+	}),
+	async (data) => {
+		await prisma.feedStoryExclusion.create({
+			data: {
+				feedId: data.feedId,
+				ruleType: data.ruleType,
+				value: data.value.trim(),
+				description: data.description?.trim() || null
+			}
+		});
+		await getFeed(data.feedId).refresh();
+	}
+);
+
+export const removeFeedStoryExclusion = form(
+	z.object({
+		id: z.string()
+	}),
+	async (data) => {
+		const exclusion = await prisma.feedStoryExclusion.delete({
 			where: { id: data.id }
 		});
 		await getFeed(exclusion.feedId).refresh();
@@ -112,12 +145,20 @@ export type FeedDetail = NonNullable<GetFeedResult> & {
 			name_en: string;
 		} | null;
 	};
-	exclusions: Array<{
+	categoryExclusions: Array<{
 		id: string;
 		category: string;
+	}>;
+	storyExclusions: Array<{
+		id: string;
+		ruleType: string;
+		value: string;
+		description: string | null;
+		active: boolean;
 	}>;
 	_count: {
 		stories: number;
 	};
 };
-export type FeedExclusion = FeedDetail['exclusions'][number];
+export type FeedCategoryExclusion = FeedDetail['categoryExclusions'][number];
+export type FeedStoryExclusion = FeedDetail['storyExclusions'][number];

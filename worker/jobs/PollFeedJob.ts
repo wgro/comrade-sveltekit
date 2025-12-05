@@ -11,7 +11,7 @@ export class PollFeedJob extends Job {
 			where: { id: feedId },
 			include: {
 				publisher: { include: { language: true } },
-				exclusions: true
+				categoryExclusions: true
 			}
 		});
 
@@ -39,7 +39,7 @@ export class PollFeedJob extends Job {
 
 			// 5. Filter out entries with excluded categories (case-insensitive)
 			const excludedCategories = new Set(
-				feed.exclusions.map((ex) => ex.category.toLowerCase())
+				feed.categoryExclusions.map((ex) => ex.category.toLowerCase())
 			);
 			const filteredEntries = newEntries.filter((entry) => {
 				const hasExcludedCategory = entry.categories.some((cat) =>

@@ -2,7 +2,7 @@
 	import Modal from '$components/Modal.svelte';
 	import StoryCard from '$components/StoryCard.svelte';
 	import Tabs from '$components/Tabs.svelte';
-	import { previewFeed, getFeedExclusions } from '$lib/api/feeds.remote';
+	import { previewFeed, getFeedCategoryExclusions } from '$lib/api/feeds.remote';
 	import SvgSpinners90RingWithBg from '~icons/svg-spinners/90-ring-with-bg';
 	import Highlight, { LineNumbers } from 'svelte-highlight';
 	import xml from 'svelte-highlight/languages/xml';
@@ -30,7 +30,7 @@
 	let activeTab = $state('xml');
 	let exclusions: string[] = $state([]);
 
-	let excludedCategories = $derived(new Set(exclusions));
+	let excludedCategories = $derived(new Set(exclusions.map((e) => e.toLowerCase())));
 
 	const tabs = [
 		{ id: 'xml', label: 'XML' },
@@ -70,7 +70,7 @@
 
 	$effect(() => {
 		if (feedId) {
-			getFeedExclusions(feedId).then((result) => {
+			getFeedCategoryExclusions(feedId).then((result) => {
 				exclusions = result;
 			});
 		} else {

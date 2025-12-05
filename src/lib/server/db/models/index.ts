@@ -31,6 +31,15 @@ export const ContentType = {
 	NEWSLETTER: 'newsletter'
 } as const;
 
+export const FeedContentType = {
+	TEXT: 'text'
+} as const;
+
+export const StoryExclusionRuleType = {
+	OG_TYPE: 'og_type',
+	JSON_LD_TYPE: 'json_ld_type'
+} as const;
+
 export const SummaryType = {
 	BRIEF: 'brief',
 	DETAILED: 'detailed',

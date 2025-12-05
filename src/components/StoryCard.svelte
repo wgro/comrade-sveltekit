@@ -29,7 +29,7 @@
 	let { title, description, link, pubDate, categories, excludedCategories = new Set() }: Props =
 		$props();
 
-	let isExcluded = $derived(categories.some((c) => excludedCategories.has(c)));
+	let isExcluded = $derived(categories.some((c) => excludedCategories.has(c.toLowerCase())));
 
 	let extracted: ExtractedContent | null = $state(null);
 	let loading = $state(false);
@@ -64,7 +64,7 @@
 	{#if categories.length > 0}
 		<div class="story-card__categories">
 			{#each categories as category, ci (ci)}
-				<CategoryBadge label={category} excluded={excludedCategories.has(category)} />
+				<CategoryBadge label={category} excluded={excludedCategories.has(category.toLowerCase())} />
 			{/each}
 		</div>
 	{/if}
