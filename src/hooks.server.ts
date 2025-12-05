@@ -12,7 +12,10 @@ if (!building) {
 			driver: '@sidequest/sqlite-backend',
 			config: './storage/sidequest.db'
 		},
-		queues: [{ name: 'default', concurrency: 1, priority: 10 }],
+		queues: [
+			{ name: 'default', concurrency: 1, priority: 10 },
+			{ name: 'stories', concurrency: 1, priority: 20 }
+		],
 		manualJobResolution: true,
 		jobsFilePath: '../worker/sidequest.jobs.ts'
 	});
