@@ -78,7 +78,7 @@
   - Connect to SQLite before starting
 
 - [ ] **Implement PollFeedJob**
-  - Fetch RSS for a single feed
+  - Fetch RSS for a single feed (completed in lib/server/services/rss/index.ts)
   - Compare entries against existing Stories (by guid)
   - Create Story documents for new entries (status: 'pending')
   - Enqueue FetchStoryJob for each new Story
