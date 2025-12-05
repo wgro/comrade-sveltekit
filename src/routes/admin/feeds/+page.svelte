@@ -11,14 +11,8 @@
 	import xml from 'svelte-highlight/languages/xml';
 	import github from 'svelte-highlight/styles/github';
 
-	interface Feed {
-		id: string;
-		name: string;
-		url: string;
-		active: boolean;
-		lastPolledAt: string | null;
-		publisher?: { name: string };
-	}
+	type GetFeedsResult = Awaited<ReturnType<typeof getFeeds>>;
+	type Feed = GetFeedsResult[number];
 
 	let previewModalOpen = $state(false);
 	let selectedFeed: Feed | null = $state(null);
@@ -59,7 +53,9 @@
 </script>
 
 <svelte:head>
-	{@html github}
+	<style>
+{github}
+	</style>
 </svelte:head>
 
 <AdminPage title="Feeds" subtitle="Manage RSS feeds and data sources">
@@ -90,7 +86,8 @@
 								<td>{feed.publisher?.name ?? ''}</td>
 								<td class="url">{feed.url}</td>
 								<td>{feed.active ? 'Active' : 'Inactive'}</td>
-								<td>{feed.lastPolledAt ? new Date(feed.lastPolledAt).toLocaleString() : 'Never'}</td>
+								<td>{feed.lastPolledAt ? new Date(feed.lastPolledAt).toLocaleString() : 'Never'}</td
+								>
 								<td class="actions">
 									<ActionButton
 										icon={PhPencilLineDuotone}
@@ -119,7 +116,11 @@
 	{/await}
 </AdminPage>
 
-<Modal open={previewModalOpen} title={selectedFeed?.name ?? 'Feed Preview'} onClose={closePreviewModal}>
+<Modal
+	open={previewModalOpen}
+	title={selectedFeed?.name ?? 'Feed Preview'}
+	onClose={closePreviewModal}
+>
 	{#if previewLoading}
 		<div class="preview-loading">
 			<SvgSpinners90RingWithBg />
