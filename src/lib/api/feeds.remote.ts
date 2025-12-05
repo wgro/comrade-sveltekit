@@ -30,6 +30,14 @@ export const previewFeed = query(z.string().url(), async (feedUrl) => {
 	return await response.text();
 });
 
+export const getFeedExclusions = query(z.string(), async (feedId) => {
+	const exclusions = await prisma.feedExclusion.findMany({
+		where: { feedId },
+		select: { category: true }
+	});
+	return exclusions.map((e) => e.category);
+});
+
 export const getFeed = query(z.string(), async (id) => {
 	return await prisma.feed.findUnique({
 		where: { id },
@@ -88,5 +96,28 @@ export const removeFeedExclusion = form(
 );
 
 export type GetFeedResult = Awaited<ReturnType<typeof getFeed>>;
-export type FeedDetail = NonNullable<GetFeedResult>;
+export type FeedType = GetFeedResult extends { type: infer T } ? T : string;
+export type FeedDetail = NonNullable<GetFeedResult> & {
+	type: FeedType;
+	publisher: {
+		id: string;
+		name: string;
+		type: string;
+		baseUrl: string;
+		active: boolean;
+		language: {
+			id: string;
+			code: string;
+			name: string;
+			name_en: string;
+		} | null;
+	};
+	exclusions: Array<{
+		id: string;
+		category: string;
+	}>;
+	_count: {
+		stories: number;
+	};
+};
 export type FeedExclusion = FeedDetail['exclusions'][number];

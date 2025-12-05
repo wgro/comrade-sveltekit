@@ -21,6 +21,7 @@
 	import github from 'svelte-highlight/styles/github';
 
 	let previewFeedUrl: string | null = $state(null);
+	let previewFeedId: string | undefined = $state(undefined);
 	let editModalOpen = $state(false);
 
 	const id = $derived(page.params.id!);
@@ -46,12 +47,14 @@
 		// TODO: implement requeue action
 	}
 
-	function handlePreview(feedUrl: string): void {
+	function handlePreview(feedUrl: string, feedId: string): void {
 		previewFeedUrl = feedUrl;
+		previewFeedId = feedId;
 	}
 
 	function closePreviewModal(): void {
 		previewFeedUrl = null;
+		previewFeedId = undefined;
 	}
 </script>
 
@@ -121,7 +124,7 @@
 						{/snippet}
 						Requeue
 					</Button>
-					<Button onclick={() => handlePreview(feed.url)}>
+					<Button onclick={() => handlePreview(feed.url, feed.id)}>
 						{#snippet icon()}
 							<PhEyeDuotone />
 						{/snippet}
@@ -248,7 +251,7 @@
 	</AdminPage>
 {/await}
 
-<FeedPreviewModal feedUrl={previewFeedUrl} onClose={closePreviewModal} />
+<FeedPreviewModal feedUrl={previewFeedUrl} feedId={previewFeedId} onClose={closePreviewModal} />
 
 <style lang="scss">
 	@use '$styles/colors' as *;

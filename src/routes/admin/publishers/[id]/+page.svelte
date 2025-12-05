@@ -20,6 +20,7 @@
 	import github from 'svelte-highlight/styles/github';
 
 	let previewFeedUrl: string | null = $state(null);
+	let previewFeedId: string | undefined = $state(undefined);
 	let previewFeedTitle: string = $state('Feed Preview');
 
 	function handleEditFeed(feed: FeedWithCount): void {
@@ -32,11 +33,13 @@
 
 	function handlePreviewFeed(feed: FeedWithCount): void {
 		previewFeedUrl = feed.url;
+		previewFeedId = feed.id;
 		previewFeedTitle = feed.name;
 	}
 
 	function closePreviewModal(): void {
 		previewFeedUrl = null;
+		previewFeedId = undefined;
 	}
 
 	const id = $derived(page.params.id!);
@@ -313,7 +316,7 @@
 	</AdminPage>
 {/await}
 
-<FeedPreviewModal feedUrl={previewFeedUrl} title={previewFeedTitle} onClose={closePreviewModal} />
+<FeedPreviewModal feedUrl={previewFeedUrl} feedId={previewFeedId} title={previewFeedTitle} onClose={closePreviewModal} />
 
 <style lang="scss">
 	@use '$styles/colors' as *;

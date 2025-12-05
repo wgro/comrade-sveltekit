@@ -23,9 +23,13 @@
 		link: string;
 		pubDate: string;
 		categories: string[];
+		excludedCategories?: Set<string>;
 	}
 
-	let { title, description, link, pubDate, categories }: Props = $props();
+	let { title, description, link, pubDate, categories, excludedCategories = new Set() }: Props =
+		$props();
+
+	let isExcluded = $derived(categories.some((c) => excludedCategories.has(c)));
 
 	let extracted: ExtractedContent | null = $state(null);
 	let loading = $state(false);
@@ -47,7 +51,7 @@
 	}
 </script>
 
-<article class="story-card">
+<article class="story-card" class:story-card--excluded={isExcluded}>
 	<header class="story-card__header">
 		<h3 class="story-card__title">{title}</h3>
 		{#if pubDate}
@@ -60,7 +64,7 @@
 	{#if categories.length > 0}
 		<div class="story-card__categories">
 			{#each categories as category, ci (ci)}
-				<CategoryBadge label={category} />
+				<CategoryBadge label={category} excluded={excludedCategories.has(category)} />
 			{/each}
 		</div>
 	{/if}
@@ -110,6 +114,10 @@
 		border-radius: 4px;
 		padding: 1rem;
 		background: $color-ivory-0;
+	}
+
+	.story-card--excluded {
+		border-color: $color-chili-3;
 	}
 
 	.story-card__header {

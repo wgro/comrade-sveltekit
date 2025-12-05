@@ -2,7 +2,7 @@
 	import Modal from '$components/Modal.svelte';
 	import StoryCard from '$components/StoryCard.svelte';
 	import Tabs from '$components/Tabs.svelte';
-	import { previewFeed } from '$lib/api/feeds.remote';
+	import { previewFeed, getFeedExclusions } from '$lib/api/feeds.remote';
 	import SvgSpinners90RingWithBg from '~icons/svg-spinners/90-ring-with-bg';
 	import Highlight, { LineNumbers } from 'svelte-highlight';
 	import xml from 'svelte-highlight/languages/xml';
@@ -17,16 +17,20 @@
 
 	interface Props {
 		feedUrl: string | null;
+		feedId?: string;
 		title?: string;
 		onClose: () => void;
 	}
 
-	let { feedUrl, title = 'Feed Preview', onClose }: Props = $props();
+	let { feedUrl, feedId, title = 'Feed Preview', onClose }: Props = $props();
 
 	let content: string | null = $state(null);
 	let loading = $state(false);
 	let error: string | null = $state(null);
 	let activeTab = $state('xml');
+	let exclusions: string[] = $state([]);
+
+	let excludedCategories = $derived(new Set(exclusions));
 
 	const tabs = [
 		{ id: 'xml', label: 'XML' },
@@ -61,6 +65,16 @@
 		} else {
 			content = null;
 			error = null;
+		}
+	});
+
+	$effect(() => {
+		if (feedId) {
+			getFeedExclusions(feedId).then((result) => {
+				exclusions = result;
+			});
+		} else {
+			exclusions = [];
 		}
 	});
 
@@ -113,7 +127,7 @@
 			{:else}
 				<div class="stories">
 					{#each items as item, i (i)}
-						<StoryCard {...item} />
+						<StoryCard {...item} {excludedCategories} />
 					{/each}
 				</div>
 			{/if}
