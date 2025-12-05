@@ -1,10 +1,10 @@
 <script lang="ts">
 	import ActionButton from '$components/ActionButton.svelte';
 	import CategoryBadge from '$components/CategoryBadge.svelte';
+	import StoryCardDetail from '$components/StoryCardDetail.svelte';
 	import StoryExclusionBadge from '$components/StoryExclusionBadge.svelte';
 	import { extractStory } from '$lib/api/stories.remote';
 	import PhFileArrowDownFill from '~icons/ph/file-arrow-down-fill';
-	import SvgSpinners90RingWithBg from '~icons/svg-spinners/90-ring-with-bg';
 	import Highlight, { LineNumbers } from 'svelte-highlight';
 	import xml from 'svelte-highlight/languages/xml';
 
@@ -76,6 +76,7 @@
 			<time class="story-card__date">{pubDate}</time>
 		{/if}
 	</header>
+
 	{#if description}
 		<p class="story-card__desc">{description}</p>
 	{/if}
@@ -112,30 +113,27 @@
 	{#if error}
 		<div class="story-card__error">{error}</div>
 	{/if}
-
+	<div class="story-card__actions">
+		{#if link}
+			<ActionButton
+				icon={PhFileArrowDownFill}
+				label="Extract"
+				title="Extract Story"
+				{loading}
+				opened={!!extracted}
+				onclick={handleExtract}
+			/>
+		{/if}
+	</div>
 	{#if extracted}
-		<div class="story-card__extracted">
-			<h4 class="story-card__extracted-title">{extracted.title}</h4>
-			{#if extracted.author}
-				<p class="story-card__extracted-author">By {extracted.author}</p>
-			{/if}
-			<div class="story-card__extracted-content">
+		<StoryCardDetail>
+			<div class="extracted__content">
 				<Highlight language={xml} code={extracted.content} let:highlighted>
 					<LineNumbers {highlighted} wrapLines />
 				</Highlight>
 			</div>
-		</div>
+		</StoryCardDetail>
 	{/if}
-
-	<footer class="story-card__actions">
-		{#if link}
-			{#if loading}
-				<span class="story-card__loading"><SvgSpinners90RingWithBg /></span>
-			{:else}
-				<ActionButton icon={PhFileArrowDownFill} title="Extract Story" onclick={handleExtract} />
-			{/if}
-		{/if}
-	</footer>
 </article>
 
 <style lang="scss">
@@ -217,8 +215,7 @@
 	.story-card__actions {
 		display: flex;
 		gap: 0.5rem;
-		padding-top: 0.5rem;
-		border-top: 1px solid $color-stone-1;
+		margin-bottom: 0.5rem;
 	}
 
 	.story-card__error {
@@ -230,34 +227,7 @@
 		border-radius: 4px;
 	}
 
-	.story-card__loading {
-		display: inline-flex;
-		align-items: center;
-		color: $color-stone-5;
-	}
-
-	.story-card__extracted {
-		margin: 0.5rem 0;
-		padding: 0.75rem;
-		background: $color-stone-0;
-		border-radius: 4px;
-		border: 1px solid $color-stone-2;
-	}
-
-	.story-card__extracted-title {
-		margin: 0 0 0.25rem;
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: $color-stone-8;
-	}
-
-	.story-card__extracted-author {
-		margin: 0 0 0.5rem;
-		font-size: 0.75rem;
-		color: $color-stone-5;
-	}
-
-	.story-card__extracted-content {
+	.extracted__content {
 		max-height: 300px;
 		overflow: auto;
 		font-size: 0.75rem;
