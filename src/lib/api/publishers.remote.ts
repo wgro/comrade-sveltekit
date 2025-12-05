@@ -83,3 +83,14 @@ export const updatePublisher = form(
 		await getPublisher(id).refresh();
 	}
 );
+
+// Derived types from remote function return values
+export type GetPublisherResult = Awaited<ReturnType<typeof getPublisher>>;
+export type PublisherDetail = NonNullable<GetPublisherResult>;
+export type FeedWithCount = PublisherDetail['feeds'][number];
+
+export type GetPublisherStoriesResult = Awaited<ReturnType<typeof getPublisherStories>>;
+export type StoryListItem = GetPublisherStoriesResult[number];
+
+export type GetLanguagesResult = Awaited<ReturnType<typeof getLanguages>>;
+export type LanguageItem = GetLanguagesResult[number];

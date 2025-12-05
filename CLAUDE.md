@@ -149,6 +149,48 @@ Key fields:
 - Use `prisma` client from `$lib/server/db/connection`
 - Type constants in `$lib/server/db/models` (e.g., `StoryStatus.PENDING`)
 
+### Type Safety (E2E)
+
+Never manually define interfaces that mirror database models. Instead, derive types from remote functions to ensure end-to-end type safety:
+
+```typescript
+// In src/lib/api/publishers.remote.ts
+export const getPublisher = query(z.string(), async (id) => {
+  return await prisma.publisher.findUnique({
+    where: { id },
+    include: { language: true, feeds: { include: { _count: { select: { stories: true } } } } }
+  });
+});
+
+// Derive types from the actual query
+export type GetPublisherResult = Awaited<ReturnType<typeof getPublisher>>;
+export type PublisherDetail = NonNullable<GetPublisherResult>;
+export type FeedWithCount = PublisherDetail['feeds'][number];
+```
+
+Then import these types in Svelte components:
+
+```typescript
+import { getPublisher, type FeedWithCount } from '$lib/api/publishers.remote';
+
+let selectedFeed: FeedWithCount | null = $state(null);
+```
+
+**Benefits:**
+- Types auto-update when queries change
+- No manual maintenance of interface definitions
+- Compile-time errors when data shape mismatches
+
+**Avoid:**
+```typescript
+// ❌ Don't manually define types that mirror DB models
+interface Feed {
+  id: string;
+  name: string;
+  // ... can drift from actual schema
+}
+```
+
 ### Sidequest Jobs
 
 - One job class per file in `worker/jobs/`

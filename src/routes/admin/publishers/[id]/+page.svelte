@@ -8,44 +8,35 @@
 		getPublisher,
 		getPublisherStories,
 		getLanguages,
-		updatePublisher
+		updatePublisher,
+		type FeedWithCount
 	} from '$lib/api/publishers.remote';
 	import { previewFeed } from '$lib/api/feeds.remote';
 	import ActionButton from '$components/ActionButton.svelte';
 	import PhPencilLineDuotone from '~icons/ph/pencil-line-duotone';
 	import PhTrashDuotone from '~icons/ph/trash-duotone';
-import PhArrowsClockwiseDuotone from '~icons/ph/arrows-clockwise-duotone';
-import PhEyeDuotone from '~icons/ph/eye-duotone';
-import SvgSpinners90RingWithBg from '~icons/svg-spinners/90-ring-with-bg';
-import Highlight, { LineNumbers } from 'svelte-highlight';
-import xml from 'svelte-highlight/languages/xml';
-import github from 'svelte-highlight/styles/github';
-
-interface Feed {
-	id: string;
-	name: string;
-	url: string;
-	active: boolean;
-	lastPolledAt: string | Date | null;
-	lastError: string | null;
-	_count: { stories: number };
-}
+	import PhArrowsClockwiseDuotone from '~icons/ph/arrows-clockwise-duotone';
+	import PhEyeDuotone from '~icons/ph/eye-duotone';
+	import SvgSpinners90RingWithBg from '~icons/svg-spinners/90-ring-with-bg';
+	import Highlight, { LineNumbers } from 'svelte-highlight';
+	import xml from 'svelte-highlight/languages/xml';
+	import github from 'svelte-highlight/styles/github';
 
 	let previewModalOpen = $state(false);
-	let selectedFeed: Feed | null = $state(null);
+	let selectedFeed: FeedWithCount | null = $state(null);
 	let previewContent: string | null = $state(null);
 	let previewLoading = $state(false);
 	let previewError: string | null = $state(null);
 
-	function handleEditFeed(feed: Feed): void {
+	function handleEditFeed(feed: FeedWithCount): void {
 		// TODO: implement edit action
 	}
 
-	function handleRequeueFeed(feed: Feed): void {
+	function handleRequeueFeed(feed: FeedWithCount): void {
 		// TODO: implement requeue action
 	}
 
-	async function handlePreviewFeed(feed: Feed): Promise<void> {
+	async function handlePreviewFeed(feed: FeedWithCount): Promise<void> {
 		selectedFeed = feed;
 		previewModalOpen = true;
 		previewLoading = true;
@@ -141,97 +132,97 @@ interface Feed {
 					<dd>{new Date(publisher.createdAt).toLocaleDateString()}</dd>
 				</dl>
 
-			<ButtonGroup>
-				<Button onclick={() => openEditModal(publisher)}>
-					{#snippet icon()}
-						<PhPencilLineDuotone />
-					{/snippet}
-					Edit
-				</Button>
-				<Button variant="danger">
-					{#snippet icon()}
-						<PhTrashDuotone />
-					{/snippet}
-					Delete
-				</Button>
-			</ButtonGroup>
+				<ButtonGroup>
+					<Button onclick={() => openEditModal(publisher)}>
+						{#snippet icon()}
+							<PhPencilLineDuotone />
+						{/snippet}
+						Edit
+					</Button>
+					<Button variant="danger">
+						{#snippet icon()}
+							<PhTrashDuotone />
+						{/snippet}
+						Delete
+					</Button>
+				</ButtonGroup>
 
-			<Modal open={editModalOpen} title="Edit Publisher" onClose={closeEditModal}>
-				<form
-					{...updatePublisher.enhance(async ({ submit }) => {
-						try {
-							await submit();
-							closeEditModal();
-						} catch (error) {
-							console.error('Form submission error:', error);
-						}
-					})}
-					class="edit-form"
-				>
-					<input type="hidden" name="id" value={updatePublisher.fields.id.value()} />
+				<Modal open={editModalOpen} title="Edit Publisher" onClose={closeEditModal}>
+					<form
+						{...updatePublisher.enhance(async ({ submit }) => {
+							try {
+								await submit();
+								closeEditModal();
+							} catch (error) {
+								console.error('Form submission error:', error);
+							}
+						})}
+						class="edit-form"
+					>
+						<input type="hidden" name="id" value={updatePublisher.fields.id.value()} />
 
-					<div class="field">
-						<label for="name">Name</label>
-						<input id="name" {...updatePublisher.fields.name.as('text')} />
-						{#each updatePublisher.fields.name.issues() as issue}
-							<span class="field-error">{issue.message}</span>
-						{/each}
-					</div>
+						<div class="field">
+							<label for="name">Name</label>
+							<input id="name" {...updatePublisher.fields.name.as('text')} />
+							{#each updatePublisher.fields.name.issues() as issue}
+								<span class="field-error">{issue.message}</span>
+							{/each}
+						</div>
 
-					<div class="field">
-						<label for="slug">Slug</label>
-						<input id="slug" {...updatePublisher.fields.slug.as('text')} />
-						{#each updatePublisher.fields.slug.issues() as issue}
-							<span class="field-error">{issue.message}</span>
-						{/each}
-					</div>
+						<div class="field">
+							<label for="slug">Slug</label>
+							<input id="slug" {...updatePublisher.fields.slug.as('text')} />
+							{#each updatePublisher.fields.slug.issues() as issue}
+								<span class="field-error">{issue.message}</span>
+							{/each}
+						</div>
 
-					<div class="field">
-						<label for="type">Type</label>
-						<select id="type" {...updatePublisher.fields.type.as('select')}>
-							<option value="rferl">RFE/RL</option>
-							<option value="competitor">Competitor</option>
-						</select>
-						{#each updatePublisher.fields.type.issues() as issue}
-							<span class="field-error">{issue.message}</span>
-						{/each}
-					</div>
+						<div class="field">
+							<label for="type">Type</label>
+							<select id="type" {...updatePublisher.fields.type.as('select')}>
+								<option value="rferl">RFE/RL</option>
+								<option value="competitor">Competitor</option>
+							</select>
+							{#each updatePublisher.fields.type.issues() as issue}
+								<span class="field-error">{issue.message}</span>
+							{/each}
+						</div>
 
-					<div class="field">
-						<label for="baseUrl">Base URL</label>
-						<input id="baseUrl" {...updatePublisher.fields.baseUrl.as('url')} />
-						{#each updatePublisher.fields.baseUrl.issues() as issue}
-							<span class="field-error">{issue.message}</span>
-						{/each}
-					</div>
+						<div class="field">
+							<label for="baseUrl">Base URL</label>
+							<input id="baseUrl" {...updatePublisher.fields.baseUrl.as('url')} />
+							{#each updatePublisher.fields.baseUrl.issues() as issue}
+								<span class="field-error">{issue.message}</span>
+							{/each}
+						</div>
 
-					<div class="field">
-						<label for="languageId">Language</label>
-						<select id="languageId" {...updatePublisher.fields.languageId.as('select')}>
-							<option value="">Select a language</option>
-							{#await getLanguages() then languages}
-								{#each languages as language (language.id)}
-									<option value={language.id}>{language.name_en} ({language.code})</option>
-								{/each}
-							{/await}
-						</select>
-						{#each updatePublisher.fields.languageId.issues() as issue}
-							<span class="field-error">{issue.message}</span>
-						{/each}
-					</div>
+						<div class="field">
+							<label for="languageId">Language</label>
+							<select id="languageId" {...updatePublisher.fields.languageId.as('select')}>
+								<option value="">Select a language</option>
+								{#await getLanguages() then languages}
+									{#each languages as language (language.id)}
+										<option value={language.id}>{language.name_en} ({language.code})</option>
+									{/each}
+								{/await}
+							</select>
+							{#each updatePublisher.fields.languageId.issues() as issue}
+								<span class="field-error">{issue.message}</span>
+							{/each}
+						</div>
 
-					<div class="field field--checkbox">
-						<label>
-							<input {...updatePublisher.fields.active.as('checkbox')} />
-							Active
-						</label>
-					</div>
+						<div class="field field--checkbox">
+							<label>
+								<input {...updatePublisher.fields.active.as('checkbox')} />
+								Active
+							</label>
+						</div>
 
-					<div class="actions">
-						<Button type="submit">Save Changes</Button>
-					</div>
-				</form>
-			</Modal>
+						<div class="actions">
+							<Button type="submit">Save Changes</Button>
+						</div>
+					</form>
+				</Modal>
 			</section>
 
 			<section class="feeds">
@@ -256,7 +247,11 @@ interface Feed {
 									<td>{feed.name}</td>
 									<td class="url"><a href={feed.url} target="_blank">{feed.url}</a></td>
 									<td>{feed._count.stories}</td>
-									<td>{feed.lastPolledAt ? new Date(feed.lastPolledAt).toLocaleString() : 'Never'}</td>
+									<td
+										>{feed.lastPolledAt
+											? new Date(feed.lastPolledAt).toLocaleString()
+											: 'Never'}</td
+									>
 									<td class:error={feed.lastError}>
 										{#if feed.lastError}
 											Error
@@ -332,9 +327,7 @@ interface Feed {
 											{/if}
 										</td>
 										<td>
-											{story.publishedAt
-												? new Date(story.publishedAt).toLocaleDateString()
-												: '-'}
+											{story.publishedAt ? new Date(story.publishedAt).toLocaleDateString() : '-'}
 										</td>
 									</tr>
 								{/each}
@@ -353,7 +346,11 @@ interface Feed {
 	</AdminPage>
 {/await}
 
-<Modal open={previewModalOpen} title={selectedFeed?.name ?? 'Feed Preview'} onClose={closePreviewModal}>
+<Modal
+	open={previewModalOpen}
+	title={selectedFeed?.name ?? 'Feed Preview'}
+	onClose={closePreviewModal}
+>
 	{#if previewLoading}
 		<div class="preview-loading">
 			<SvgSpinners90RingWithBg />
