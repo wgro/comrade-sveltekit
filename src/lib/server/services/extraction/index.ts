@@ -4,6 +4,7 @@ import { JSDOM } from 'jsdom';
 export interface ExtractedContent {
 	title: string;
 	content: string;
+	rawHtml: string;
 	textContent: string;
 	author: string | null;
 	excerpt: string | null;
@@ -93,6 +94,7 @@ export function extractFromHtml(html: string, url: string): ExtractedContent {
 	return {
 		title: article.title || '',
 		content: article.content || '',
+		rawHtml: html,
 		textContent: article.textContent || '',
 		author: article.byline || null,
 		excerpt: article.excerpt || null,

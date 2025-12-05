@@ -3,6 +3,7 @@
 	import CategoryBadge from '$components/CategoryBadge.svelte';
 	import StoryCardDetail from '$components/StoryCardDetail.svelte';
 	import StoryExclusionBadge from '$components/StoryExclusionBadge.svelte';
+	import Tabs from '$components/Tabs.svelte';
 	import { extractStory } from '$lib/api/stories.remote';
 	import PhFileArrowDownFill from '~icons/ph/file-arrow-down-fill';
 	import Highlight, { LineNumbers } from 'svelte-highlight';
@@ -11,6 +12,7 @@
 	interface ExtractedContent {
 		title: string;
 		content: string;
+		rawHtml: string;
 		textContent: string;
 		author: string | null;
 		excerpt: string | null;
@@ -52,6 +54,12 @@
 	let extracted: ExtractedContent | null = $state(null);
 	let loading = $state(false);
 	let error: string | null = $state(null);
+	let extractedTab = $state('processed');
+
+	const extractedTabs = [
+		{ id: 'raw', label: 'Raw' },
+		{ id: 'processed', label: 'Processed' }
+	];
 
 	async function handleExtract(): Promise<void> {
 		if (!link || loading) return;
@@ -127,11 +135,19 @@
 	</div>
 	{#if extracted}
 		<StoryCardDetail>
-			<div class="extracted__content">
-				<Highlight language={xml} code={extracted.content} let:highlighted>
-					<LineNumbers {highlighted} wrapLines />
-				</Highlight>
-			</div>
+			<Tabs tabs={extractedTabs} activeTab={extractedTab} onTabChange={(id) => (extractedTab = id)}>
+				<div class="extracted__content">
+					{#if extractedTab === 'raw'}
+						<Highlight language={xml} code={extracted.rawHtml} let:highlighted>
+							<LineNumbers {highlighted} wrapLines />
+						</Highlight>
+					{:else}
+						<Highlight language={xml} code={extracted.content} let:highlighted>
+							<LineNumbers {highlighted} wrapLines />
+						</Highlight>
+					{/if}
+				</div>
+			</Tabs>
 		</StoryCardDetail>
 	{/if}
 </article>

@@ -70,6 +70,7 @@
 		align-items: center;
 		justify-content: center;
 		z-index: 1000;
+		backdrop-filter: blur(1px);
 	}
 
 	.modal__container {
