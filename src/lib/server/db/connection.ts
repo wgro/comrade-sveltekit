@@ -1,8 +1,10 @@
 import { PrismaClient } from './generated/client';
 import { PrismaLibSql } from '@prisma/adapter-libsql';
 
+const DATABASE_URL = process.env.DATABASE_URL ?? 'file:./storage/comrade.db';
+
 const adapter = new PrismaLibSql({
-	url: 'file:./storage/comrade.db'
+	url: DATABASE_URL
 });
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };

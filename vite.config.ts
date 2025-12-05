@@ -10,6 +10,7 @@ export default defineConfig({
 	  }),devtoolsJson()],
 	test: {
 		expect: { requireAssertions: true },
+		globalSetup: ['./test/setup/vitest.global-setup.ts'],
 		projects: [
 			{
 				extends: './vite.config.ts',
@@ -17,7 +18,10 @@ export default defineConfig({
 					name: 'server',
 					environment: 'node',
 					include: ['src/**/*.{test,spec}.{js,ts}', 'test/**/*.{test,spec}.{js,ts}'],
-					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
+					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+					env: {
+						DATABASE_URL: 'file:./storage/comrade.test.db'
+					}
 				}
 			}
 		]

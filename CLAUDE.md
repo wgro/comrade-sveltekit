@@ -242,6 +242,49 @@ NODE_ENV=development
 }
 ```
 
+## Testing
+
+### Database Tests with Transaction Rollback
+
+Database tests use a separate test database (`storage/comrade.test.db`) with automatic transaction rollback for test isolation. Each test runs in a transaction that rolls back after completion.
+
+**Usage:**
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { setupTestDb, createTestPublisher, createTestStory } from '../setup';
+
+describe('My database tests', () => {
+  const { getContext } = setupTestDb();
+
+  it('creates and queries data', async () => {
+    const { tx } = getContext();
+
+    // Use tx (transaction client) for all database operations
+    const publisher = await createTestPublisher(tx, { name: 'Test Pub' });
+    expect(publisher.id).toBeDefined();
+  });
+  // Data is automatically rolled back - next test starts with clean slate
+});
+```
+
+**Available fixtures** (in `test/setup/fixtures.ts`):
+
+- `createTestLanguage(tx, options?)` - Creates a Language
+- `createTestPublisher(tx, options?)` - Creates Publisher (auto-creates Language if needed)
+- `createTestFeed(tx, options?)` - Creates Feed (auto-creates Publisher if needed)
+- `createTestStory(tx, options?)` - Creates Story (auto-creates Feed if needed)
+- `createTestTranslation(tx, options?)` - Creates Translation (auto-creates Story if needed)
+- `createTestSummary(tx, options?)` - Creates Summary (auto-creates Story if needed)
+- `createFullStoryPipeline(tx, options?)` - Creates complete chain: Language → Publisher → Feed → Story → Translation → Summary
+
+**Running tests:**
+
+```bash
+bun run test:unit                    # Run all unit tests
+bun run test:unit test/db/           # Run only database tests
+```
+
 ## Future Expansion
 
 The `contentType` field on Story is designed for future support of:

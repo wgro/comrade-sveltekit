@@ -6,6 +6,6 @@ export default defineConfig({
 		path: 'prisma/migrations'
 	},
 	datasource: {
-		url: 'file:./storage/comrade.db'
+		url: process.env.DATABASE_URL ?? 'file:./storage/comrade.db'
 	}
 });
