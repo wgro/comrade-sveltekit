@@ -34,7 +34,14 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if open}
-	<div class="modal__overlay" onclick={handleOverlayClick} onkeydown={handleOverlayKeydown} role="dialog" aria-modal="true" tabindex="-1">
+	<div
+		class="modal__overlay"
+		onclick={handleOverlayClick}
+		onkeydown={handleOverlayKeydown}
+		role="dialog"
+		aria-modal="true"
+		tabindex="-1"
+	>
 		<div class="modal__container">
 			<header class="modal__header">
 				<h2 class="modal__title">{title}</h2>
@@ -68,7 +75,7 @@
 	.modal__container {
 		background: white;
 		border-radius: 8px;
-		width: 600px;
+		width: 1256px;
 		max-width: 90vw;
 		max-height: 90vh;
 		overflow: auto;

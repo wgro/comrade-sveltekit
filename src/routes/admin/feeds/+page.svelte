@@ -82,7 +82,7 @@
 					{:else}
 						{#each feeds as feed (feed.id)}
 							<tr>
-								<td>{feed.name}</td>
+								<td><a href="/admin/feeds/{feed.id}">{feed.name}</a></td>
 								<td>{feed.publisher?.name ?? ''}</td>
 								<td class="url">{feed.url}</td>
 								<td>{feed.active ? 'Active' : 'Inactive'}</td>

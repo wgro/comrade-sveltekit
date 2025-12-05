@@ -3,6 +3,7 @@
 	import AdminPage from '$components/AdminPage.svelte';
 	import Button from '$components/Button.svelte';
 	import ButtonGroup from '$components/ButtonGroup.svelte';
+	import FeedPreviewModal from '$components/FeedPreviewModal.svelte';
 	import Modal from '$components/Modal.svelte';
 	import {
 		getPublisher,
@@ -11,22 +12,15 @@
 		updatePublisher,
 		type FeedWithCount
 	} from '$lib/api/publishers.remote';
-	import { previewFeed } from '$lib/api/feeds.remote';
 	import ActionButton from '$components/ActionButton.svelte';
 	import PhPencilLineDuotone from '~icons/ph/pencil-line-duotone';
 	import PhTrashDuotone from '~icons/ph/trash-duotone';
 	import PhArrowsClockwiseDuotone from '~icons/ph/arrows-clockwise-duotone';
 	import PhEyeDuotone from '~icons/ph/eye-duotone';
-	import SvgSpinners90RingWithBg from '~icons/svg-spinners/90-ring-with-bg';
-	import Highlight, { LineNumbers } from 'svelte-highlight';
-	import xml from 'svelte-highlight/languages/xml';
 	import github from 'svelte-highlight/styles/github';
 
-	let previewModalOpen = $state(false);
-	let selectedFeed: FeedWithCount | null = $state(null);
-	let previewContent: string | null = $state(null);
-	let previewLoading = $state(false);
-	let previewError: string | null = $state(null);
+	let previewFeedUrl: string | null = $state(null);
+	let previewFeedTitle: string = $state('Feed Preview');
 
 	function handleEditFeed(feed: FeedWithCount): void {
 		// TODO: implement edit action
@@ -36,27 +30,13 @@
 		// TODO: implement requeue action
 	}
 
-	async function handlePreviewFeed(feed: FeedWithCount): Promise<void> {
-		selectedFeed = feed;
-		previewModalOpen = true;
-		previewLoading = true;
-		previewError = null;
-		previewContent = null;
-
-		try {
-			previewContent = await previewFeed(feed.url);
-		} catch (error) {
-			previewError = error instanceof Error ? error.message : 'Failed to fetch feed';
-		} finally {
-			previewLoading = false;
-		}
+	function handlePreviewFeed(feed: FeedWithCount): void {
+		previewFeedUrl = feed.url;
+		previewFeedTitle = feed.name;
 	}
 
 	function closePreviewModal(): void {
-		previewModalOpen = false;
-		selectedFeed = null;
-		previewContent = null;
-		previewError = null;
+		previewFeedUrl = null;
 	}
 
 	const id = $derived(page.params.id!);
@@ -346,26 +326,7 @@
 	</AdminPage>
 {/await}
 
-<Modal
-	open={previewModalOpen}
-	title={selectedFeed?.name ?? 'Feed Preview'}
-	onClose={closePreviewModal}
->
-	{#if previewLoading}
-		<div class="preview-loading">
-			<SvgSpinners90RingWithBg />
-			<span>Loading feed...</span>
-		</div>
-	{:else if previewError}
-		<div class="preview-error">{previewError}</div>
-	{:else if previewContent}
-		<div class="preview-content">
-			<Highlight language={xml} code={previewContent} let:highlighted>
-				<LineNumbers {highlighted} wrapLines />
-			</Highlight>
-		</div>
-	{/if}
-</Modal>
+<FeedPreviewModal feedUrl={previewFeedUrl} title={previewFeedTitle} onClose={closePreviewModal} />
 
 <style lang="scss">
 	@use '$styles/colors' as *;
@@ -505,27 +466,5 @@
 	.edit-form .actions {
 		margin-top: 0.5rem;
 		justify-content: flex-end;
-	}
-
-	.preview-loading {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.5rem;
-		padding: 2rem;
-		color: $color-stone-5;
-	}
-
-	.preview-error {
-		padding: 1rem;
-		color: $color-chili-5;
-		background: $color-chili-0;
-		border-radius: 4px;
-	}
-
-	.preview-content {
-		max-height: 60vh;
-		overflow: auto;
-		font-size: 0.75rem;
 	}
 </style>

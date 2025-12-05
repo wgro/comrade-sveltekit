@@ -29,3 +29,16 @@ export const previewFeed = query(z.string().url(), async (feedUrl) => {
 	}
 	return await response.text();
 });
+
+export const getFeed = query(z.string(), async (id) => {
+	return await prisma.feed.findUnique({
+		where: { id },
+		include: {
+			publisher: { include: { language: true } },
+			_count: { select: { stories: true } }
+		}
+	});
+});
+
+export type GetFeedResult = Awaited<ReturnType<typeof getFeed>>;
+export type FeedDetail = NonNullable<GetFeedResult>;
