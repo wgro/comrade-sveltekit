@@ -54,19 +54,16 @@ async function seed(): Promise<void> {
 	// Upsert RFE/RL publishers (one per language service)
 	const publishersData = [
 		{
-			slug: 'rferl-en',
 			name: 'Radio Free Europe/Radio Liberty - Central Newsroom',
 			languageId: englishLang.id,
 			baseUrl: 'https://www.rferl.org'
 		},
 		{
-			slug: 'rferl-uk',
 			name: 'Radio Free Europe/Radio Liberty - Ukrainian Service',
 			languageId: ukrainianLang.id,
 			baseUrl: 'https://www.radiosvoboda.org'
 		},
 		{
-			slug: 'rferl-ru',
 			name: 'Radio Free Europe/Radio Liberty - Russian Service',
 			languageId: russianLang.id,
 			baseUrl: 'https://www.svoboda.org'
@@ -77,7 +74,6 @@ async function seed(): Promise<void> {
 	const publishers: Array<{
 		id: string;
 		name: string;
-		slug: string;
 		type: string;
 		baseUrl: string;
 		languageId: string;
@@ -87,11 +83,11 @@ async function seed(): Promise<void> {
 	}> = [];
 	for (const pubData of publishersData) {
 		const publisher = await prisma.publisher.upsert({
-			where: { slug: pubData.slug },
+			where: { baseUrl: pubData.baseUrl },
 			update: {},
 			create: {
 				...pubData,
-				type: 'primary',
+				type: 'rferl',
 				active: true
 			}
 		});
@@ -102,17 +98,17 @@ async function seed(): Promise<void> {
 	// Upsert feeds for each publisher
 	const feedsData = [
 		{
-			publisherSlug: 'rferl-en',
+			publisherBaseUrl: 'https://www.rferl.org',
 			name: 'Central Newsroom',
 			url: 'https://www.rferl.org/api/'
 		},
 		{
-			publisherSlug: 'rferl-uk',
+			publisherBaseUrl: 'https://www.radiosvoboda.org',
 			name: 'Ukrainian Service',
 			url: 'https://www.radiosvoboda.org/api/'
 		},
 		{
-			publisherSlug: 'rferl-ru',
+			publisherBaseUrl: 'https://www.svoboda.org',
 			name: 'Russian Service',
 			url: 'https://www.svoboda.org/api/'
 		}
@@ -120,9 +116,9 @@ async function seed(): Promise<void> {
 
 	console.log('Seeding feeds...');
 	for (const feedData of feedsData) {
-		const publisher = publishers.find((p) => p.slug === feedData.publisherSlug);
+		const publisher = publishers.find((p) => p.baseUrl === feedData.publisherBaseUrl);
 		if (!publisher) {
-			console.warn(`Publisher not found for slug: ${feedData.publisherSlug}`);
+			console.warn(`Publisher not found for baseUrl: ${feedData.publisherBaseUrl}`);
 			continue;
 		}
 

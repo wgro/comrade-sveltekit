@@ -47,7 +47,6 @@
 	function openEditModal(publisher: {
 		id: string;
 		name: string;
-		slug: string;
 		type: string;
 		baseUrl: string;
 		languageId: string;
@@ -56,7 +55,6 @@
 		updatePublisher.fields.set({
 			id: publisher.id,
 			name: publisher.name,
-			slug: publisher.slug,
 			type: publisher.type as 'rferl' | 'competitor',
 			baseUrl: publisher.baseUrl,
 			languageId: publisher.languageId,
@@ -92,9 +90,6 @@
 				<dl>
 					<dt>Name</dt>
 					<dd>{publisher.name}</dd>
-
-					<dt>Slug</dt>
-					<dd>{publisher.slug}</dd>
 
 					<dt>Type</dt>
 					<dd>{publisher.type}</dd>
@@ -145,14 +140,6 @@
 							<label for="name">Name</label>
 							<input id="name" {...updatePublisher.fields.name.as('text')} />
 							{#each updatePublisher.fields.name.issues() as issue}
-								<span class="field-error">{issue.message}</span>
-							{/each}
-						</div>
-
-						<div class="field">
-							<label for="slug">Slug</label>
-							<input id="slug" {...updatePublisher.fields.slug.as('text')} />
-							{#each updatePublisher.fields.slug.issues() as issue}
 								<span class="field-error">{issue.message}</span>
 							{/each}
 						</div>

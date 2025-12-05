@@ -5,6 +5,7 @@ export interface FeedEntry {
 	title: string;
 	link: string;
 	pubDate: Date | null;
+	categories: string[];
 }
 
 export interface ParsedFeed {
@@ -87,13 +88,15 @@ export function parseFeedContent(content: string): ParsedFeed {
 			const title = extractTitle(item);
 			const link = extractLink(item);
 			const pubDate = extractPubDate(item);
+			const categories = extractCategories(item);
 
 			if (guid && link) {
 				entries.push({
 					guid,
 					title: title || '',
 					link,
-					pubDate
+					pubDate,
+					categories
 				});
 			}
 		}
@@ -206,4 +209,52 @@ function extractPubDate(item: Record<string, unknown>): Date | null {
 	}
 
 	return null;
+}
+
+/**
+ * Extracts categories from a feed entry.
+ * Handles both RSS and Atom category formats.
+ *
+ * @param item - The feed entry object
+ * @returns An array of category strings
+ *
+ * @remarks
+ * Handles multiple category formats:
+ * - RSS: string values or objects with 'value' property
+ * - Atom: objects with 'term' or 'label' property
+ * - Single values or arrays of categories
+ */
+function extractCategories(item: Record<string, unknown>): string[] {
+	const categories: string[] = [];
+
+	if (!('category' in item) && !('categories' in item)) {
+		return categories;
+	}
+
+	const rawCategories = item.category ?? item.categories;
+
+	if (!rawCategories) {
+		return categories;
+	}
+
+	const categoryList = Array.isArray(rawCategories) ? rawCategories : [rawCategories];
+
+	for (const cat of categoryList) {
+		if (typeof cat === 'string') {
+			categories.push(cat);
+		} else if (cat && typeof cat === 'object') {
+			// RSS format: { value: "Category Name" }
+			if ('value' in cat && typeof (cat as { value: unknown }).value === 'string') {
+				categories.push((cat as { value: string }).value);
+			}
+			// Atom format: { term: "category-slug", label: "Category Name" }
+			else if ('term' in cat && typeof (cat as { term: unknown }).term === 'string') {
+				categories.push((cat as { term: string }).term);
+			} else if ('label' in cat && typeof (cat as { label: unknown }).label === 'string') {
+				categories.push((cat as { label: string }).label);
+			}
+		}
+	}
+
+	return categories;
 }

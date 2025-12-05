@@ -14,7 +14,6 @@
 				<thead>
 					<tr>
 						<th>Name</th>
-						<th>Slug</th>
 						<th>Type</th>
 						<th>Language</th>
 						<th>Status</th>
@@ -24,7 +23,6 @@
 					{#each publishers as publisher (publisher.id)}
 						<tr>
 							<td><a href="/admin/publishers/{publisher.id}">{publisher.name}</a></td>
-							<td>{publisher.slug}</td>
 							<td>{publisher.type}</td>
 							<td>{publisher.language?.name ?? ''}</td>
 							<td>{publisher.active ? 'Active' : 'Inactive'}</td>

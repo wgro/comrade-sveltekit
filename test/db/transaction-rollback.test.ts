@@ -24,7 +24,6 @@ describe('Database Transaction Rollback', () => {
 
 			const publisher = await createTestPublisher(tx, {
 				name: 'Radio Svoboda',
-				slug: 'radio-svoboda',
 				type: PublisherType.PRIMARY,
 				baseUrl: 'https://www.radiosvoboda.org',
 				languageId: language.id
@@ -35,17 +34,17 @@ describe('Database Transaction Rollback', () => {
 			expect(publisher.languageId).toBe(language.id);
 		});
 
-		it('finds publisher by slug', async () => {
+		it('finds publisher by baseUrl', async () => {
 			const { tx } = getContext();
 
-			await createTestPublisher(tx, { slug: 'test-slug' });
+			await createTestPublisher(tx, { baseUrl: 'https://test.example.com' });
 
 			const found = await tx.publisher.findUnique({
-				where: { slug: 'test-slug' }
+				where: { baseUrl: 'https://test.example.com' }
 			});
 
 			expect(found).not.toBeNull();
-			expect(found?.slug).toBe('test-slug');
+			expect(found?.baseUrl).toBe('https://test.example.com');
 		});
 
 		it('updates publisher active status', async () => {
@@ -88,10 +87,10 @@ describe('Database Transaction Rollback', () => {
 	});
 
 	describe('Test isolation (rollback proof)', () => {
-		it('first test creates a publisher with specific slug', async () => {
+		it('first test creates a publisher with specific baseUrl', async () => {
 			const { tx } = getContext();
 
-			await createTestPublisher(tx, { slug: 'isolation-test-slug' });
+			await createTestPublisher(tx, { baseUrl: 'https://isolation-test.example.com' });
 
 			const count = await tx.publisher.count();
 			// Should only have the one we just created (plus auto-created language)
@@ -103,7 +102,7 @@ describe('Database Transaction Rollback', () => {
 
 			// The publisher from the previous test should NOT exist
 			const found = await tx.publisher.findUnique({
-				where: { slug: 'isolation-test-slug' }
+				where: { baseUrl: 'https://isolation-test.example.com' }
 			});
 			expect(found).toBeNull();
 

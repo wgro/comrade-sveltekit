@@ -68,7 +68,6 @@ export const updatePublisher = form(
 	z.object({
 		id: z.string(),
 		name: z.string().min(1, 'Name is required'),
-		slug: z.string().min(1, 'Slug is required'),
 		type: z.enum(['rferl', 'competitor']),
 		baseUrl: z.string().url('Must be a valid URL'),
 		languageId: z.string().min(1, 'Language is required'),

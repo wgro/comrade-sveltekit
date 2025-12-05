@@ -6,10 +6,13 @@ import { FetchStoryJob } from './FetchStoryJob';
 
 export class PollFeedJob extends Job {
 	async run(feedId: string) {
-		// 1. Fetch feed with publisher -> language relation
+		// 1. Fetch feed with publisher -> language relation and exclusions
 		const feed = await prisma.feed.findUnique({
 			where: { id: feedId },
-			include: { publisher: { include: { language: true } } }
+			include: {
+				publisher: { include: { language: true } },
+				exclusions: true
+			}
 		});
 
 		if (!feed) {
@@ -34,9 +37,21 @@ export class PollFeedJob extends Job {
 			// 4. Filter to new entries only
 			const newEntries = parsed.entries.filter((e) => !existingSet.has(e.guid));
 
-			// 5. Create stories and enqueue jobs
+			// 5. Filter out entries with excluded categories (case-insensitive)
+			const excludedCategories = new Set(
+				feed.exclusions.map((ex) => ex.category.toLowerCase())
+			);
+			const filteredEntries = newEntries.filter((entry) => {
+				const hasExcludedCategory = entry.categories.some((cat) =>
+					excludedCategories.has(cat.toLowerCase())
+				);
+				return !hasExcludedCategory;
+			});
+			const excludedCount = newEntries.length - filteredEntries.length;
+
+			// 6. Create stories and enqueue jobs
 			const createdStories = [];
-			for (const entry of newEntries) {
+			for (const entry of filteredEntries) {
 				const story = await prisma.story.create({
 					data: {
 						feedId,
@@ -59,11 +74,12 @@ export class PollFeedJob extends Job {
 			});
 
 			console.log(
-				`[PollFeedJob] Feed ${feed.name}: found ${parsed.entries.length} entries, created ${createdStories.length} new stories`
+				`[PollFeedJob] Feed ${feed.name}: found ${parsed.entries.length} entries, excluded ${excludedCount}, created ${createdStories.length} new stories`
 			);
 
 			return {
 				entriesFound: parsed.entries.length,
+				entriesExcluded: excludedCount,
 				storiesCreated: createdStories.length
 			};
 		} catch (error) {

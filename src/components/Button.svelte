@@ -6,13 +6,15 @@
 		icon?: Snippet;
 		variant?: 'default' | 'danger';
 		type?: 'button' | 'submit' | 'reset';
+		disabled?: boolean;
 		onclick?: () => void;
 	}
 
-	let { children, icon, variant = 'default', type = 'button', onclick }: Props = $props();
+	let { children, icon, variant = 'default', type = 'button', disabled = false, onclick }: Props =
+		$props();
 </script>
 
-<button class="btn btn--{variant}" {type} {onclick}>
+<button class="btn btn--{variant}" {type} {disabled} {onclick}>
 	{#if icon}
 		<span class="btn__icon">
 			{@render icon()}

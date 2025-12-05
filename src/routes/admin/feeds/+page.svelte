@@ -67,6 +67,7 @@
 				<thead>
 					<tr>
 						<th>Name</th>
+						<th>Type</th>
 						<th>Publisher</th>
 						<th>URL</th>
 						<th>Status</th>
@@ -77,12 +78,13 @@
 				<tbody>
 					{#if feeds.length === 0}
 						<tr>
-							<td colspan="6" class="empty">No feeds found</td>
+							<td colspan="7" class="empty">No feeds found</td>
 						</tr>
 					{:else}
 						{#each feeds as feed (feed.id)}
 							<tr>
 								<td><a href="/admin/feeds/{feed.id}">{feed.name}</a></td>
+								<td>{feed.type}</td>
 								<td>{feed.publisher?.name ?? ''}</td>
 								<td class="url">{feed.url}</td>
 								<td>{feed.active ? 'Active' : 'Inactive'}</td>

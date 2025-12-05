@@ -43,7 +43,6 @@ export async function createTestLanguage(
 
 export interface CreatePublisherOptions {
 	name?: string;
-	slug?: string;
 	type?: string;
 	baseUrl?: string;
 	languageId?: string;
@@ -61,13 +60,12 @@ export async function createTestPublisher(
 		languageId = language.id;
 	}
 
-	const slug = options.slug ?? uniqueId('pub');
+	const pubId = uniqueId('pub');
 	return tx.publisher.create({
 		data: {
-			name: options.name ?? `Test Publisher ${slug}`,
-			slug,
+			name: options.name ?? `Test Publisher ${pubId}`,
 			type: options.type ?? PublisherType.PRIMARY,
-			baseUrl: options.baseUrl ?? `https://${slug}.example.com`,
+			baseUrl: options.baseUrl ?? `https://${pubId}.example.com`,
 			languageId,
 			active: options.active ?? true
 		}

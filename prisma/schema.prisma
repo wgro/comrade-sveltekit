@@ -19,9 +19,8 @@ model Language {
 model Publisher {
   id         String   @id @default(cuid())
   name       String
-  slug       String   @unique
   type       String // 'rferl' | 'competitor'
-  baseUrl    String
+  baseUrl    String   @unique
   languageId String
   active     Boolean  @default(true)
   createdAt  DateTime @default(now())
@@ -36,16 +35,30 @@ model Feed {
   publisherId  String
   name         String
   url          String
+  type         String    @default("rss") // 'rss'
   active       Boolean   @default(true)
   lastPolledAt DateTime?
   lastError    String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  publisher Publisher @relation(fields: [publisherId], references: [id], onDelete: Cascade)
-  stories   Story[]
+  publisher  Publisher       @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  stories    Story[]
+  exclusions FeedExclusion[]
 
   @@unique([publisherId, url])
+}
+
+model FeedExclusion {
+  id        String   @id @default(cuid())
+  feedId    String
+  category  String
+  createdAt DateTime @default(now())
+
+  feed Feed @relation(fields: [feedId], references: [id], onDelete: Cascade)
+
+  @@unique([feedId, category])
+  @@index([feedId])
 }
 
 model Story {
