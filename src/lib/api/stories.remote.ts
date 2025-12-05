@@ -1,5 +1,12 @@
 import { query } from '$app/server';
+import { z } from 'zod';
 import { prisma } from '$lib/server/db/connection';
+import { extractFromUrl } from '$lib/server/services/extraction';
+
+export const extractStory = query(z.string().url(), async (url) => {
+	const extracted = await extractFromUrl(url);
+	return extracted;
+});
 
 export const getStories = query(async () => {
 	const stories = await prisma.story.findMany({

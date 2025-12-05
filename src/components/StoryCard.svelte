@@ -1,5 +1,21 @@
 <script lang="ts">
+	import ActionButton from '$components/ActionButton.svelte';
 	import CategoryBadge from '$components/CategoryBadge.svelte';
+	import { extractStory } from '$lib/api/stories.remote';
+	import PhFileArrowDownFill from '~icons/ph/file-arrow-down-fill';
+	import SvgSpinners90RingWithBg from '~icons/svg-spinners/90-ring-with-bg';
+	import Highlight, { LineNumbers } from 'svelte-highlight';
+	import xml from 'svelte-highlight/languages/xml';
+
+	interface ExtractedContent {
+		title: string;
+		content: string;
+		textContent: string;
+		author: string | null;
+		excerpt: string | null;
+		siteName: string | null;
+		length: number;
+	}
 
 	interface Props {
 		title: string;
@@ -10,6 +26,25 @@
 	}
 
 	let { title, description, link, pubDate, categories }: Props = $props();
+
+	let extracted: ExtractedContent | null = $state(null);
+	let loading = $state(false);
+	let error: string | null = $state(null);
+
+	async function handleExtract(): Promise<void> {
+		if (!link || loading) return;
+
+		loading = true;
+		error = null;
+
+		try {
+			extracted = await extractStory(link);
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to extract story';
+		} finally {
+			loading = false;
+		}
+	}
 </script>
 
 <article class="story-card">
@@ -34,8 +69,36 @@
 			<a href={link} target="_blank" rel="noopener">{link}</a>
 		</div>
 	{/if}
+	{#if error}
+		<div class="story-card__error">{error}</div>
+	{/if}
+
+	{#if extracted}
+		<div class="story-card__extracted">
+			<h4 class="story-card__extracted-title">{extracted.title}</h4>
+			{#if extracted.author}
+				<p class="story-card__extracted-author">By {extracted.author}</p>
+			{/if}
+			<div class="story-card__extracted-content">
+				<Highlight language={xml} code={extracted.content} let:highlighted>
+					<LineNumbers {highlighted} wrapLines />
+				</Highlight>
+			</div>
+		</div>
+	{/if}
+
 	<footer class="story-card__actions">
-		<!-- Actions to be implemented -->
+		{#if link}
+			{#if loading}
+				<span class="story-card__loading"><SvgSpinners90RingWithBg /></span>
+			{:else}
+				<ActionButton
+					icon={PhFileArrowDownFill}
+					title="Extract Story"
+					onclick={handleExtract}
+				/>
+			{/if}
+		{/if}
 	</footer>
 </article>
 
@@ -104,5 +167,47 @@
 		gap: 0.5rem;
 		padding-top: 0.5rem;
 		border-top: 1px solid $color-stone-1;
+	}
+
+	.story-card__error {
+		padding: 0.5rem;
+		margin-bottom: 0.5rem;
+		font-size: 0.75rem;
+		color: $color-chili-5;
+		background: $color-chili-0;
+		border-radius: 4px;
+	}
+
+	.story-card__loading {
+		display: inline-flex;
+		align-items: center;
+		color: $color-stone-5;
+	}
+
+	.story-card__extracted {
+		margin: 0.5rem 0;
+		padding: 0.75rem;
+		background: $color-stone-0;
+		border-radius: 4px;
+		border: 1px solid $color-stone-2;
+	}
+
+	.story-card__extracted-title {
+		margin: 0 0 0.25rem;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: $color-stone-8;
+	}
+
+	.story-card__extracted-author {
+		margin: 0 0 0.5rem;
+		font-size: 0.75rem;
+		color: $color-stone-5;
+	}
+
+	.story-card__extracted-content {
+		max-height: 300px;
+		overflow: auto;
+		font-size: 0.75rem;
 	}
 </style>
