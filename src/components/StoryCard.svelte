@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ActionButton from '$components/ActionButton.svelte';
 	import CategoryBadge from '$components/CategoryBadge.svelte';
+	import StoryExclusionBadge from '$components/StoryExclusionBadge.svelte';
 	import { extractStory } from '$lib/api/stories.remote';
 	import PhFileArrowDownFill from '~icons/ph/file-arrow-down-fill';
 	import SvgSpinners90RingWithBg from '~icons/svg-spinners/90-ring-with-bg';
@@ -17,6 +18,13 @@
 		length: number;
 	}
 
+	interface StoryExclusion {
+		id?: string;
+		ruleType: 'og_type' | 'json_ld_type' | string;
+		value: string;
+		description?: string | null;
+	}
+
 	interface Props {
 		title: string;
 		description: string;
@@ -24,12 +32,22 @@
 		pubDate: string;
 		categories: string[];
 		excludedCategories?: Set<string>;
+		storyExclusions?: StoryExclusion[];
 	}
 
-	let { title, description, link, pubDate, categories, excludedCategories = new Set() }: Props =
-		$props();
+	let {
+		title,
+		description,
+		link,
+		pubDate,
+		categories,
+		excludedCategories = new Set(),
+		storyExclusions = []
+	}: Props = $props();
 
 	let isExcluded = $derived(categories.some((c) => excludedCategories.has(c.toLowerCase())));
+	const hasCategories = $derived(categories.length > 0);
+	const hasStoryExclusions = $derived(storyExclusions.length > 0);
 
 	let extracted: ExtractedContent | null = $state(null);
 	let loading = $state(false);
@@ -61,11 +79,29 @@
 	{#if description}
 		<p class="story-card__desc">{description}</p>
 	{/if}
-	{#if categories.length > 0}
-		<div class="story-card__categories">
-			{#each categories as category, ci (ci)}
-				<CategoryBadge label={category} excluded={excludedCategories.has(category.toLowerCase())} />
-			{/each}
+	{#if hasCategories || hasStoryExclusions}
+		<div class="story-card__meta" class:story-card__meta--two-col={hasStoryExclusions}>
+			{#if hasCategories}
+				<div class="story-card__categories">
+					{#each categories as category, ci (ci)}
+						<CategoryBadge
+							label={category}
+							excluded={excludedCategories.has(category.toLowerCase())}
+						/>
+					{/each}
+				</div>
+			{/if}
+			{#if hasStoryExclusions}
+				<div class="story-card__exclusions">
+					{#each storyExclusions as exclusion, ei (exclusion.id ?? `${exclusion.ruleType}-${exclusion.value}-${ei}`)}
+						<StoryExclusionBadge
+							ruleType={exclusion.ruleType}
+							value={exclusion.value}
+							description={exclusion.description ?? undefined}
+						/>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	{/if}
 	{#if link}
@@ -96,11 +132,7 @@
 			{#if loading}
 				<span class="story-card__loading"><SvgSpinners90RingWithBg /></span>
 			{:else}
-				<ActionButton
-					icon={PhFileArrowDownFill}
-					title="Extract Story"
-					onclick={handleExtract}
-				/>
+				<ActionButton icon={PhFileArrowDownFill} title="Extract Story" onclick={handleExtract} />
 			{/if}
 		{/if}
 	</footer>
@@ -148,11 +180,23 @@
 		line-height: 1.4;
 	}
 
-	.story-card__categories {
+	.story-card__meta {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.story-card__meta--two-col {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		align-items: start;
+	}
+
+	.story-card__categories,
+	.story-card__exclusions {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.25rem;
-		margin-bottom: 0.5rem;
 	}
 
 	.story-card__link {
