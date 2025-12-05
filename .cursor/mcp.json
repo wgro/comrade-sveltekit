@@ -1,14 +1,7 @@
 {
-	"mcpServers": {
-		"svelte": {
-			"url": "https://mcp.svelte.dev/mcp"
-		},
-		"context7": {
-			"command": "bunx",
-			"args": ["-y", "@upstash/context7-mcp"],
-			"env": {
-				"CONTEXT7_API_KEY": "ctx7sk-77f45501-5cf9-4283-bcf8-95bf6fc90bb8"
-			}
-		}
-	}
+  "mcpServers": {
+    "svelte": {
+      "url": "https://mcp.svelte.dev/mcp"
+    }
+  }
 }
