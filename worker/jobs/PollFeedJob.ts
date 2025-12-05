@@ -1,8 +1,8 @@
 import { Job, Sidequest } from 'sidequest';
-import { prisma } from '$lib/server/db/connection';
-import { fetchAndParseFeed } from '$lib/server/services/rss';
-import { StoryStatus } from '$lib/server/db/models';
-import { FetchStoryJob } from './FetchStoryJob';
+import { prisma } from '../../src/lib/server/db/connection.ts';
+import { fetchAndParseFeed } from '../../src/lib/server/services/rss/index.ts';
+import { StoryStatus } from '../../src/lib/server/db/models/index.ts';
+import { FetchStoryJob } from './FetchStoryJob.ts';
 
 export class PollFeedJob extends Job {
 	async run(feedId: string) {

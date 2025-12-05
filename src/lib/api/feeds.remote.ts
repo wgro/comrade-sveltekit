@@ -2,6 +2,8 @@ import { query, form } from '$app/server';
 import { z } from 'zod';
 import { find } from 'feedfinder-ts';
 import { prisma } from '$lib/server/db/connection';
+import { Sidequest } from 'sidequest';
+import { PollFeedJob } from '../../../worker/jobs/PollFeedJob';
 
 export const findFeeds = query(z.string().url(), async (url) => {
 	const feeds = await find(url, {
@@ -134,6 +136,18 @@ export const removeFeedStoryExclusion = form(
 		await getFeed(exclusion.feedId).refresh();
 	}
 );
+
+export const requeueFeed = query(z.string(), async (feedId) => {
+	const feed = await prisma.feed.findUnique({
+		where: { id: feedId },
+		select: { id: true, name: true }
+	});
+	if (!feed) {
+		throw new Error(`Feed not found: ${feedId}`);
+	}
+	await Sidequest.build(PollFeedJob).enqueue(feedId);
+	return { success: true, feedName: feed.name };
+});
 
 export type GetFeedResult = Awaited<ReturnType<typeof getFeed>>;
 export type FeedType = GetFeedResult extends { type: infer T } ? T : string;

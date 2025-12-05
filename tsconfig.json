@@ -22,7 +22,9 @@
 		"src/**/*.ts",
 		"src/**/*.svelte",
 		"test/**/*.ts",
-		"worker/**/*.ts"
+		"worker/**/*.ts",
+		"worker/sidequest.jobs.js",
+		"worker/sidequest.jobs.js"
 	]
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
 	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files

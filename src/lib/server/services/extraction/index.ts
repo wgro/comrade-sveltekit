@@ -19,12 +19,12 @@ export interface ExtractedContent {
 }
 
 export class ExtractionError extends Error {
-	constructor(
-		message: string,
-		public readonly cause?: unknown
-	) {
+	override readonly cause?: unknown;
+
+	constructor(message: string, cause?: unknown) {
 		super(message);
 		this.name = 'ExtractionError';
+		this.cause = cause;
 	}
 }
 

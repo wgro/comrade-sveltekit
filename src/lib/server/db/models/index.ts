@@ -1,5 +1,5 @@
 // Re-export Prisma types
-export type { Publisher, Feed, Story, Translation, Summary } from '../generated/client';
+export type { Publisher, Feed, Story, Translation, Summary } from '../generated/client.ts';
 
 // Type-safe constants for enum-like fields
 export const PublisherType = {

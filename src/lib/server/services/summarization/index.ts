@@ -4,12 +4,12 @@ import { generateStructuredContent, LlmError, Type, type Schema } from '../llm';
  * Custom error class for summarization-related failures.
  */
 export class SummarizationError extends Error {
-	constructor(
-		message: string,
-		public readonly cause?: unknown
-	) {
+	override readonly cause?: unknown;
+
+	constructor(message: string, cause?: unknown) {
 		super(message);
 		this.name = 'SummarizationError';
+		this.cause = cause;
 	}
 }
 

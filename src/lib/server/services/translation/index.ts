@@ -4,12 +4,12 @@ import { generateText, LlmError } from '../llm';
  * Custom error class for translation-related failures.
  */
 export class TranslationError extends Error {
-	constructor(
-		message: string,
-		public readonly cause?: unknown
-	) {
+	override readonly cause?: unknown;
+
+	constructor(message: string, cause?: unknown) {
 		super(message);
 		this.name = 'TranslationError';
+		this.cause = cause;
 	}
 }
 

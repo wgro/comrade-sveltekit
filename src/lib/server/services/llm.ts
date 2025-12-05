@@ -7,12 +7,12 @@ export { Type, type Schema } from '@google/genai';
  * Custom error class for LLM-related failures.
  */
 export class LlmError extends Error {
-	constructor(
-		message: string,
-		public readonly cause?: unknown
-	) {
+	override readonly cause?: unknown;
+
+	constructor(message: string, cause?: unknown) {
 		super(message);
 		this.name = 'LlmError';
+		this.cause = cause;
 	}
 }
 

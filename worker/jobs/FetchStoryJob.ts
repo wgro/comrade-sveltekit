@@ -1,8 +1,8 @@
 import { Job, Sidequest } from 'sidequest';
-import { prisma } from '$lib/server/db/connection';
-import { extractFromUrl, type ExtractedContent } from '$lib/server/services/extraction';
-import { StoryStatus } from '$lib/server/db/models';
-import { TranslateStoryJob } from './TranslateStoryJob';
+import { prisma } from '../../src/lib/server/db/connection.ts';
+import { extractFromUrl, type ExtractedContent } from '../../src/lib/server/services/extraction/index.ts';
+import { StoryStatus } from '../../src/lib/server/db/models/index.ts';
+import { TranslateStoryJob } from './TranslateStoryJob.ts';
 
 interface FetchStoryOptions {
 	preview?: boolean;

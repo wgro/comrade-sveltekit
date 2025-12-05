@@ -12,6 +12,7 @@
 		updatePublisher,
 		type FeedWithCount
 	} from '$lib/api/publishers.remote';
+	import { requeueFeed } from '$lib/api/feeds.remote';
 	import ActionButton from '$components/ActionButton.svelte';
 	import PhPencilLineDuotone from '~icons/ph/pencil-line-duotone';
 	import PhTrashDuotone from '~icons/ph/trash-duotone';
@@ -27,8 +28,8 @@
 		// TODO: implement edit action
 	}
 
-	function handleRequeueFeed(feed: FeedWithCount): void {
-		// TODO: implement requeue action
+	async function handleRequeueFeed(feed: FeedWithCount): Promise<void> {
+		await requeueFeed(feed.id);
 	}
 
 	function handlePreviewFeed(feed: FeedWithCount): void {

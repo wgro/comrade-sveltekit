@@ -12,6 +12,7 @@
 		removeFeedCategoryExclusion,
 		addFeedStoryExclusion,
 		removeFeedStoryExclusion,
+		requeueFeed,
 		type FeedDetail
 	} from '$lib/api/feeds.remote';
 	import PhPencilLineDuotone from '~icons/ph/pencil-line-duotone';
@@ -44,8 +45,8 @@
 		editModalOpen = false;
 	}
 
-	function handleRequeue(): void {
-		// TODO: implement requeue action
+	async function handleRequeue(): Promise<void> {
+		await requeueFeed(id);
 	}
 
 	function handlePreview(feedUrl: string, feedId: string): void {
