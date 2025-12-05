@@ -2,7 +2,7 @@
 	import Modal from '$components/Modal.svelte';
 	import StoryCard from '$components/StoryCard.svelte';
 	import Tabs from '$components/Tabs.svelte';
-	import { previewFeed, getFeedCategoryExclusions } from '$lib/api/feeds.remote';
+	import { previewFeed, getFeedCategoryExclusions, getFeedStoryExclusions } from '$lib/api/feeds.remote';
 	import SvgSpinners90RingWithBg from '~icons/svg-spinners/90-ring-with-bg';
 	import Highlight, { LineNumbers } from 'svelte-highlight';
 	import xml from 'svelte-highlight/languages/xml';
@@ -29,6 +29,12 @@
 	let error: string | null = $state(null);
 	let activeTab = $state('xml');
 	let exclusions: string[] = $state([]);
+	let storyExclusionRules: Array<{
+		id: string;
+		ruleType: string;
+		value: string;
+		description: string | null;
+	}> = $state([]);
 
 	let excludedCategories = $derived(new Set(exclusions.map((e) => e.toLowerCase())));
 
@@ -73,8 +79,12 @@
 			getFeedCategoryExclusions(feedId).then((result) => {
 				exclusions = result;
 			});
+			getFeedStoryExclusions(feedId).then((result) => {
+				storyExclusionRules = result;
+			});
 		} else {
 			exclusions = [];
+			storyExclusionRules = [];
 		}
 	});
 
@@ -127,7 +137,7 @@
 			{:else}
 				<div class="stories">
 					{#each items as item, i (i)}
-						<StoryCard {...item} {excludedCategories} />
+						<StoryCard {...item} {excludedCategories} {storyExclusionRules} />
 					{/each}
 				</div>
 			{/if}

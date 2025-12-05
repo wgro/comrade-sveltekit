@@ -38,6 +38,13 @@ export const getFeedCategoryExclusions = query(z.string(), async (feedId) => {
 	return exclusions.map((e) => e.category);
 });
 
+export const getFeedStoryExclusions = query(z.string(), async (feedId) => {
+	return await prisma.feedStoryExclusion.findMany({
+		where: { feedId, active: true },
+		select: { id: true, ruleType: true, value: true, description: true }
+	});
+});
+
 export const getFeed = query(z.string(), async (id) => {
 	return await prisma.feed.findUnique({
 		where: { id },

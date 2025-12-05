@@ -9,6 +9,11 @@
 	import Highlight, { LineNumbers } from 'svelte-highlight';
 	import xml from 'svelte-highlight/languages/xml';
 
+	interface ExtractedMetadata {
+		ogType: string | null;
+		jsonLdTypes: string[];
+	}
+
 	interface ExtractedContent {
 		title: string;
 		content: string;
@@ -18,6 +23,14 @@
 		excerpt: string | null;
 		siteName: string | null;
 		length: number;
+		metadata: ExtractedMetadata;
+	}
+
+	interface StoryExclusionRule {
+		id: string;
+		ruleType: string;
+		value: string;
+		description: string | null;
 	}
 
 	interface StoryExclusion {
@@ -35,6 +48,7 @@
 		categories: string[];
 		excludedCategories?: Set<string>;
 		storyExclusions?: StoryExclusion[];
+		storyExclusionRules?: StoryExclusionRule[];
 	}
 
 	let {
@@ -44,12 +58,49 @@
 		pubDate,
 		categories,
 		excludedCategories = new Set(),
-		storyExclusions = []
+		storyExclusions = [],
+		storyExclusionRules = []
 	}: Props = $props();
 
-	let isExcluded = $derived(categories.some((c) => excludedCategories.has(c.toLowerCase())));
+	let isCategoryExcluded = $derived(categories.some((c) => excludedCategories.has(c.toLowerCase())));
 	const hasCategories = $derived(categories.length > 0);
 	const hasStoryExclusions = $derived(storyExclusions.length > 0);
+
+	// Compute matched story exclusions based on extracted metadata
+	let matchedExclusions = $derived.by(() => {
+		if (!extracted?.metadata || storyExclusionRules.length === 0) return [];
+
+		const matched: StoryExclusion[] = [];
+		const { ogType, jsonLdTypes } = extracted.metadata;
+
+		for (const rule of storyExclusionRules) {
+			if (rule.ruleType === 'og_type' && ogType) {
+				if (ogType.toLowerCase() === rule.value.toLowerCase()) {
+					matched.push({
+						id: rule.id,
+						ruleType: rule.ruleType,
+						value: rule.value,
+						description: rule.description
+					});
+				}
+			} else if (rule.ruleType === 'json_ld_type' && jsonLdTypes.length > 0) {
+				if (jsonLdTypes.some((t) => t.toLowerCase() === rule.value.toLowerCase())) {
+					matched.push({
+						id: rule.id,
+						ruleType: rule.ruleType,
+						value: rule.value,
+						description: rule.description
+					});
+				}
+			}
+		}
+
+		return matched;
+	});
+
+	let isStoryExcluded = $derived(matchedExclusions.length > 0);
+	let isExcluded = $derived(isCategoryExcluded || isStoryExcluded);
+	let hasMatchedExclusions = $derived(matchedExclusions.length > 0);
 
 	let extracted: ExtractedContent | null = $state(null);
 	let loading = $state(false);
@@ -135,6 +186,17 @@
 	</div>
 	{#if extracted}
 		<StoryCardDetail>
+			{#if hasMatchedExclusions}
+				<div class="extracted__exclusions">
+					{#each matchedExclusions as exclusion (exclusion.id ?? `${exclusion.ruleType}-${exclusion.value}`)}
+						<StoryExclusionBadge
+							ruleType={exclusion.ruleType}
+							value={exclusion.value}
+							description={exclusion.description ?? undefined}
+						/>
+					{/each}
+				</div>
+			{/if}
 			<Tabs tabs={extractedTabs} activeTab={extractedTab} onTabChange={(id) => (extractedTab = id)}>
 				<div class="extracted__content">
 					{#if extractedTab === 'raw'}
@@ -247,5 +309,12 @@
 		max-height: 300px;
 		overflow: auto;
 		font-size: 0.75rem;
+	}
+
+	.extracted__exclusions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem;
+		margin-bottom: 0.5rem;
 	}
 </style>
