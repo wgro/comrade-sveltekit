@@ -214,7 +214,7 @@
 						<tbody>
 							{#each publisher.feeds as feed (feed.id)}
 								<tr>
-									<td>{feed.name}</td>
+									<td><a href="/admin/feeds/{feed.id}">{feed.name}</a></td>
 									<td class="url"><a href={feed.url} target="_blank">{feed.url}</a></td>
 									<td>{feed._count.stories}</td>
 									<td
@@ -316,7 +316,12 @@
 	</AdminPage>
 {/await}
 
-<FeedPreviewModal feedUrl={previewFeedUrl} feedId={previewFeedId} title={previewFeedTitle} onClose={closePreviewModal} />
+<FeedPreviewModal
+	feedUrl={previewFeedUrl}
+	feedId={previewFeedId}
+	title={previewFeedTitle}
+	onClose={closePreviewModal}
+/>
 
 <style lang="scss">
 	@use '$styles/colors' as *;
