@@ -1,5 +1,5 @@
 <script lang="ts">
-	import AdminPage from '$components/AdminPage.svelte';
+	import AdminHeader from '$components/AdminHeader.svelte';
 	import ActionButton from '$components/ActionButton.svelte';
 	import Modal from '$components/Modal.svelte';
 	import { getFeeds, previewFeed } from '$lib/api/feeds.remote';
@@ -58,65 +58,65 @@
 	</style>
 </svelte:head>
 
-<AdminPage title="Feeds" subtitle="Manage RSS feeds and data sources">
-	{#await getFeeds()}
-		<p>Loading...</p>
-	{:then feeds}
-		<div class="feeds-table">
-			<table class="table">
-				<thead>
+<AdminHeader title="Feeds" subtitle="Manage RSS feeds and data sources" />
+
+{#await getFeeds()}
+	<p>Loading...</p>
+{:then feeds}
+	<div class="feeds-table">
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Type</th>
+					<th>Publisher</th>
+					<th>URL</th>
+					<th>Status</th>
+					<th>Last Polled</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#if feeds.length === 0}
 					<tr>
-						<th>Name</th>
-						<th>Type</th>
-						<th>Publisher</th>
-						<th>URL</th>
-						<th>Status</th>
-						<th>Last Polled</th>
-						<th>Actions</th>
+						<td colspan="7" class="empty">No feeds found</td>
 					</tr>
-				</thead>
-				<tbody>
-					{#if feeds.length === 0}
+				{:else}
+					{#each feeds as feed (feed.id)}
 						<tr>
-							<td colspan="7" class="empty">No feeds found</td>
+							<td><a href="/admin/feeds/{feed.id}">{feed.name}</a></td>
+							<td>{feed.type}</td>
+							<td>{feed.publisher?.name ?? ''}</td>
+							<td class="url">{feed.url}</td>
+							<td>{feed.active ? 'Active' : 'Inactive'}</td>
+							<td>{feed.lastPolledAt ? new Date(feed.lastPolledAt).toLocaleString() : 'Never'}</td
+							>
+							<td class="actions">
+								<ActionButton
+									icon={PhPencilLineDuotone}
+									title="Edit feed"
+									onclick={() => handleEdit(feed)}
+								/>
+								<ActionButton
+									icon={PhArrowsClockwiseDuotone}
+									title="Requeue feed"
+									onclick={() => handleRequeue(feed)}
+								/>
+								<ActionButton
+									icon={PhEyeDuotone}
+									title="Preview feed"
+									onclick={() => handlePreview(feed)}
+								/>
+							</td>
 						</tr>
-					{:else}
-						{#each feeds as feed (feed.id)}
-							<tr>
-								<td><a href="/admin/feeds/{feed.id}">{feed.name}</a></td>
-								<td>{feed.type}</td>
-								<td>{feed.publisher?.name ?? ''}</td>
-								<td class="url">{feed.url}</td>
-								<td>{feed.active ? 'Active' : 'Inactive'}</td>
-								<td>{feed.lastPolledAt ? new Date(feed.lastPolledAt).toLocaleString() : 'Never'}</td
-								>
-								<td class="actions">
-									<ActionButton
-										icon={PhPencilLineDuotone}
-										title="Edit feed"
-										onclick={() => handleEdit(feed)}
-									/>
-									<ActionButton
-										icon={PhArrowsClockwiseDuotone}
-										title="Requeue feed"
-										onclick={() => handleRequeue(feed)}
-									/>
-									<ActionButton
-										icon={PhEyeDuotone}
-										title="Preview feed"
-										onclick={() => handlePreview(feed)}
-									/>
-								</td>
-							</tr>
-						{/each}
-					{/if}
-				</tbody>
-			</table>
-		</div>
-	{:catch}
-		<p>Error loading feeds</p>
-	{/await}
-</AdminPage>
+					{/each}
+				{/if}
+			</tbody>
+		</table>
+	</div>
+{:catch}
+	<p>Error loading feeds</p>
+{/await}
 
 <Modal
 	open={previewModalOpen}

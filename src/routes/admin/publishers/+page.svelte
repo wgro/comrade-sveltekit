@@ -1,40 +1,40 @@
 <script lang="ts">
-	import AdminPage from '$components/AdminPage.svelte';
+	import AdminHeader from '$components/AdminHeader.svelte';
 	import { getPublishers } from '$lib/api/publishers.remote';
 </script>
 
-<AdminPage title="Publishers" subtitle="Manage news publishers and organizations">
-	{#await getPublishers()}
-		<p>Loading...</p>
-	{:then publishers}
-		{#if publishers.length === 0}
-			<p class="empty">No publishers found</p>
-		{:else}
-			<table class="table">
-				<thead>
+<AdminHeader title="Publishers" subtitle="Manage news publishers and organizations" />
+
+{#await getPublishers()}
+	<p>Loading...</p>
+{:then publishers}
+	{#if publishers.length === 0}
+		<p class="empty">No publishers found</p>
+	{:else}
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Type</th>
+					<th>Language</th>
+					<th>Status</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each publishers as publisher (publisher.id)}
 					<tr>
-						<th>Name</th>
-						<th>Type</th>
-						<th>Language</th>
-						<th>Status</th>
+						<td><a href="/admin/publishers/{publisher.id}">{publisher.name}</a></td>
+						<td>{publisher.type}</td>
+						<td>{publisher.language?.name ?? ''}</td>
+						<td>{publisher.active ? 'Active' : 'Inactive'}</td>
 					</tr>
-				</thead>
-				<tbody>
-					{#each publishers as publisher (publisher.id)}
-						<tr>
-							<td><a href="/admin/publishers/{publisher.id}">{publisher.name}</a></td>
-							<td>{publisher.type}</td>
-							<td>{publisher.language?.name ?? ''}</td>
-							<td>{publisher.active ? 'Active' : 'Inactive'}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		{/if}
-	{:catch}
-		<p>Error loading publishers</p>
-	{/await}
-</AdminPage>
+				{/each}
+			</tbody>
+		</table>
+	{/if}
+{:catch}
+	<p>Error loading publishers</p>
+{/await}
 
 <style>
 	.table {

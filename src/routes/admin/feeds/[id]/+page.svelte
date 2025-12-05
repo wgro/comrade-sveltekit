@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import AdminPage from '$components/AdminPage.svelte';
+	import AdminHeader from '$components/AdminHeader.svelte';
 	import Button from '$components/Button.svelte';
 	import ButtonGroup from '$components/ButtonGroup.svelte';
 	import FeedPreviewModal from '$components/FeedPreviewModal.svelte';
@@ -65,54 +65,16 @@
 </svelte:head>
 
 {#await feedPromise}
-	<AdminPage title="Feed Details" subtitle="View feed information and stories">
-		<p>Loading feed...</p>
-	</AdminPage>
+	<AdminHeader title="Feed Details" subtitle="View feed information and stories" />
+	<p>Loading feed...</p>
 {:then feed}
-	<AdminPage
+	<AdminHeader
 		title="Feed Details"
 		subtitle="View feed information and stories"
 		lastBreadcrumbSegment={feed?.name}
 	>
-		{#if !feed}
-			<p class="error">Feed not found</p>
-		{:else}
-			<section class="details">
-				<h2>Details</h2>
-				<dl>
-					<dt>Name</dt>
-					<dd>{feed.name}</dd>
-
-					<dt>Type</dt>
-					<dd>{feed.type}</dd>
-
-					<dt>URL</dt>
-					<dd><a href={feed.url} target="_blank">{feed.url}</a></dd>
-
-					<dt>Publisher</dt>
-					<dd>
-						<a href="/admin/publishers/{feed.publisher.id}">{feed.publisher.name}</a>
-						({feed.publisher.language?.name_en ?? 'N/A'})
-					</dd>
-
-					<dt>Status</dt>
-					<dd>{feed.active ? 'Active' : 'Inactive'}</dd>
-
-					<dt>Stories</dt>
-					<dd>{feed._count.stories}</dd>
-
-					<dt>Last Polled</dt>
-					<dd>{feed.lastPolledAt ? new Date(feed.lastPolledAt).toLocaleString() : 'Never'}</dd>
-
-					{#if feed.lastError}
-						<dt>Last Error</dt>
-						<dd class="error">{feed.lastError}</dd>
-					{/if}
-
-					<dt>Created</dt>
-					<dd>{new Date(feed.createdAt).toLocaleDateString()}</dd>
-				</dl>
-
+		{#snippet actions()}
+			{#if feed}
 				<ButtonGroup>
 					<Button onclick={() => openEditModal(feed)}>
 						{#snippet icon()}
@@ -139,175 +101,215 @@
 						Delete
 					</Button>
 				</ButtonGroup>
+			{/if}
+		{/snippet}
+	</AdminHeader>
 
-				<Modal open={editModalOpen} title="Edit Feed" onClose={closeEditModal}>
+	{#if !feed}
+		<p class="error">Feed not found</p>
+	{:else}
+		<section class="details">
+			<h2>Details</h2>
+			<dl>
+				<dt>Name</dt>
+				<dd>{feed.name}</dd>
+
+				<dt>Type</dt>
+				<dd>{feed.type}</dd>
+
+				<dt>URL</dt>
+				<dd><a href={feed.url} target="_blank">{feed.url}</a></dd>
+
+				<dt>Publisher</dt>
+				<dd>
+					<a href="/admin/publishers/{feed.publisher.id}">{feed.publisher.name}</a>
+					({feed.publisher.language?.name_en ?? 'N/A'})
+				</dd>
+
+				<dt>Status</dt>
+				<dd>{feed.active ? 'Active' : 'Inactive'}</dd>
+
+				<dt>Stories</dt>
+				<dd>{feed._count.stories}</dd>
+
+				<dt>Last Polled</dt>
+				<dd>{feed.lastPolledAt ? new Date(feed.lastPolledAt).toLocaleString() : 'Never'}</dd>
+
+				{#if feed.lastError}
+					<dt>Last Error</dt>
+					<dd class="error">{feed.lastError}</dd>
+				{/if}
+
+				<dt>Created</dt>
+				<dd>{new Date(feed.createdAt).toLocaleDateString()}</dd>
+			</dl>
+
+			<Modal open={editModalOpen} title="Edit Feed" onClose={closeEditModal}>
+				<form
+					{...updateFeed.enhance(async ({ submit }) => {
+						try {
+							await submit();
+							closeEditModal();
+						} catch (error) {
+							console.error('Form submission error:', error);
+						}
+					})}
+					class="edit-form"
+				>
+					<input type="hidden" name="id" value={updateFeed.fields.id.value()} />
+
+					<div class="field">
+						<label for="name">Name</label>
+						<input id="name" {...updateFeed.fields.name.as('text')} />
+						{#each updateFeed.fields.name.issues() as issue (issue.message)}
+							<span class="field-error">{issue.message}</span>
+						{/each}
+					</div>
+
+					<div class="field">
+						<label for="url">URL</label>
+						<input id="url" {...updateFeed.fields.url.as('url')} />
+						{#each updateFeed.fields.url.issues() as issue (issue.message)}
+							<span class="field-error">{issue.message}</span>
+						{/each}
+					</div>
+
+					<div class="field">
+						<label for="type">Type</label>
+						<select id="type" {...updateFeed.fields.type.as('select')}>
+							<option value="rss">RSS</option>
+						</select>
+						{#each updateFeed.fields.type.issues() as issue (issue.message)}
+							<span class="field-error">{issue.message}</span>
+						{/each}
+					</div>
+
+					<div class="field field--checkbox">
+						<label>
+							<input {...updateFeed.fields.active.as('checkbox')} />
+							Active
+						</label>
+					</div>
+
+					<div class="form-actions">
+						<Button type="submit">Save Changes</Button>
+					</div>
+				</form>
+			</Modal>
+		</section>
+
+		<div class="exclusions-grid">
+			<section class="exclusions">
+				<h2>Category Exclusions</h2>
+				<p class="help">Items with these categories will be skipped during feed polling.</p>
+
+				{#if feed.categoryExclusions.length > 0}
+					<div class="tags">
+						{#each feed.categoryExclusions as exclusion (exclusion.id)}
+							{@const remove = removeFeedCategoryExclusion.for(exclusion.id)}
+							<form class="tag" {...remove.enhance(async ({ submit }) => submit())}>
+								<input type="hidden" name="id" value={exclusion.id} />
+								<span>{exclusion.category}</span>
+								<button
+									type="submit"
+									class="tag__remove"
+									disabled={!!remove.pending}
+									aria-label="Remove {exclusion.category}"
+								>
+									<PhXCircleDuotone />
+								</button>
+							</form>
+						{/each}
+					</div>
+				{:else}
+					<p class="empty">No exclusions configured.</p>
+				{/if}
+
+				{#if feed}
+					{@const add = addFeedCategoryExclusion.for(feed.id)}
 					<form
-						{...updateFeed.enhance(async ({ submit }) => {
-							try {
-								await submit();
-								closeEditModal();
-							} catch (error) {
-								console.error('Form submission error:', error);
-							}
+						class="add-exclusion"
+						{...add.enhance(async ({ form, submit }) => {
+							await submit();
+							form.reset();
 						})}
-						class="edit-form"
 					>
-						<input type="hidden" name="id" value={updateFeed.fields.id.value()} />
-
-						<div class="field">
-							<label for="name">Name</label>
-							<input id="name" {...updateFeed.fields.name.as('text')} />
-							{#each updateFeed.fields.name.issues() as issue (issue.message)}
-								<span class="field-error">{issue.message}</span>
-							{/each}
-						</div>
-
-						<div class="field">
-							<label for="url">URL</label>
-							<input id="url" {...updateFeed.fields.url.as('url')} />
-							{#each updateFeed.fields.url.issues() as issue (issue.message)}
-								<span class="field-error">{issue.message}</span>
-							{/each}
-						</div>
-
-						<div class="field">
-							<label for="type">Type</label>
-							<select id="type" {...updateFeed.fields.type.as('select')}>
-								<option value="rss">RSS</option>
-							</select>
-							{#each updateFeed.fields.type.issues() as issue (issue.message)}
-								<span class="field-error">{issue.message}</span>
-							{/each}
-						</div>
-
-						<div class="field field--checkbox">
-							<label>
-								<input {...updateFeed.fields.active.as('checkbox')} />
-								Active
-							</label>
-						</div>
-
-						<div class="actions">
-							<Button type="submit">Save Changes</Button>
-						</div>
+						<input type="hidden" name="feedId" value={feed.id} />
+						<input type="text" name="category" placeholder="Category to exclude..." required />
+						<Button type="submit" disabled={!!add.pending}>
+							{#snippet icon()}
+								<PhPlusDuotone />
+							{/snippet}
+							Add
+						</Button>
 					</form>
-				</Modal>
+				{/if}
 			</section>
 
-			<div class="exclusions-grid">
-				<section class="exclusions">
-					<h2>Category Exclusions</h2>
-					<p class="help">Items with these categories will be skipped during feed polling.</p>
+			<section class="exclusions">
+				<h2>Story Exclusions</h2>
+				<p class="help">
+					Stories matching these rules will be skipped during content extraction.
+				</p>
 
-					{#if feed.categoryExclusions.length > 0}
-						<div class="tags">
-							{#each feed.categoryExclusions as exclusion (exclusion.id)}
-								{@const remove = removeFeedCategoryExclusion.for(exclusion.id)}
-								<form class="tag" {...remove.enhance(async ({ submit }) => submit())}>
-									<input type="hidden" name="id" value={exclusion.id} />
-									<span>{exclusion.category}</span>
-									<button
-										type="submit"
-										class="tag__remove"
-										disabled={!!remove.pending}
-										aria-label="Remove {exclusion.category}"
-									>
-										<PhXCircleDuotone />
-									</button>
-								</form>
-							{/each}
-						</div>
-					{:else}
-						<p class="empty">No exclusions configured.</p>
-					{/if}
+				{#if feed.storyExclusions.length > 0}
+					<div class="tags">
+						{#each feed.storyExclusions as exclusion (exclusion.id)}
+							{@const remove = removeFeedStoryExclusion.for(exclusion.id)}
+							<form class="tag" {...remove.enhance(async ({ submit }) => submit())}>
+								<input type="hidden" name="id" value={exclusion.id} />
+								<span class="tag__rule"
+									>{exclusion.ruleType === 'og_type' ? 'og:type' : '@type'}</span
+								>
+								<span>{exclusion.value}</span>
+								{#if exclusion.description}
+									<span class="tag__desc" title={exclusion.description}>ℹ</span>
+								{/if}
+								<button
+									type="submit"
+									class="tag__remove"
+									disabled={!!remove.pending}
+									aria-label="Remove {exclusion.value}"
+								>
+									<PhXCircleDuotone />
+								</button>
+							</form>
+						{/each}
+					</div>
+				{:else}
+					<p class="empty">No story exclusions configured.</p>
+				{/if}
 
-					{#if feed}
-						{@const add = addFeedCategoryExclusion.for(feed.id)}
-						<form
-							class="add-exclusion"
-							{...add.enhance(async ({ form, submit }) => {
-								await submit();
-								form.reset();
-							})}
-						>
-							<input type="hidden" name="feedId" value={feed.id} />
-							<input type="text" name="category" placeholder="Category to exclude..." required />
-							<Button type="submit" disabled={!!add.pending}>
-								{#snippet icon()}
-									<PhPlusDuotone />
-								{/snippet}
-								Add
-							</Button>
-						</form>
-					{/if}
-				</section>
-
-				<section class="exclusions">
-					<h2>Story Exclusions</h2>
-					<p class="help">
-						Stories matching these rules will be skipped during content extraction.
-					</p>
-
-					{#if feed.storyExclusions.length > 0}
-						<div class="tags">
-							{#each feed.storyExclusions as exclusion (exclusion.id)}
-								{@const remove = removeFeedStoryExclusion.for(exclusion.id)}
-								<form class="tag" {...remove.enhance(async ({ submit }) => submit())}>
-									<input type="hidden" name="id" value={exclusion.id} />
-									<span class="tag__rule"
-										>{exclusion.ruleType === 'og_type' ? 'og:type' : '@type'}</span
-									>
-									<span>{exclusion.value}</span>
-									{#if exclusion.description}
-										<span class="tag__desc" title={exclusion.description}>ℹ</span>
-									{/if}
-									<button
-										type="submit"
-										class="tag__remove"
-										disabled={!!remove.pending}
-										aria-label="Remove {exclusion.value}"
-									>
-										<PhXCircleDuotone />
-									</button>
-								</form>
-							{/each}
-						</div>
-					{:else}
-						<p class="empty">No story exclusions configured.</p>
-					{/if}
-
-					{#if feed}
-						{@const add = addFeedStoryExclusion.for(feed.id)}
-						<form
-							class="add-story-exclusion"
-							{...add.enhance(async ({ form, submit }) => {
-								await submit();
-								form.reset();
-							})}
-						>
-							<input type="hidden" name="feedId" value={feed.id} />
-							<select name="ruleType" required>
-								<option value="og_type">og:type</option>
-								<option value="json_ld_type">JSON-LD @type</option>
-							</select>
-							<input type="text" name="value" placeholder="Value to match..." required />
-							<input type="text" name="description" placeholder="Note (optional)" />
-							<Button type="submit" disabled={!!add.pending}>
-								{#snippet icon()}
-									<PhPlusDuotone />
-								{/snippet}
-								Add
-							</Button>
-						</form>
-					{/if}
-				</section>
-			</div>
-		{/if}
-	</AdminPage>
+				{#if feed}
+					{@const add = addFeedStoryExclusion.for(feed.id)}
+					<form
+						class="add-story-exclusion"
+						{...add.enhance(async ({ form, submit }) => {
+							await submit();
+							form.reset();
+						})}
+					>
+						<input type="hidden" name="feedId" value={feed.id} />
+						<select name="ruleType" required>
+							<option value="og_type">og:type</option>
+							<option value="json_ld_type">JSON-LD @type</option>
+						</select>
+						<input type="text" name="value" placeholder="Value to match..." required />
+						<input type="text" name="description" placeholder="Note (optional)" />
+						<Button type="submit" disabled={!!add.pending}>
+							{#snippet icon()}
+								<PhPlusDuotone />
+							{/snippet}
+							Add
+						</Button>
+					</form>
+				{/if}
+			</section>
+		</div>
+	{/if}
 {:catch}
-	<AdminPage title="Feed Details" subtitle="View feed information and stories">
-		<p class="error">Error loading feed</p>
-	</AdminPage>
+	<AdminHeader title="Feed Details" subtitle="View feed information and stories" />
+	<p class="error">Error loading feed</p>
 {/await}
 
 <FeedPreviewModal feedUrl={previewFeedUrl} feedId={previewFeedId} onClose={closePreviewModal} />
@@ -412,7 +414,7 @@
 		font-size: 0.75rem;
 	}
 
-	.actions {
+	.form-actions {
 		margin-top: 0.5rem;
 		display: flex;
 		justify-content: flex-end;

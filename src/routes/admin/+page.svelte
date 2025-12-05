@@ -1,7 +1,7 @@
 <script lang="ts">
-	import AdminPage from '$components/AdminPage.svelte';
+	import AdminHeader from '$components/AdminHeader.svelte';
 </script>
 
-<AdminPage title="Admin Dashboard" subtitle="Welcome to the Comrade admin panel">
-	<p>Dashboard content will go here.</p>
-</AdminPage>
+<AdminHeader title="Admin Dashboard" subtitle="Welcome to the Comrade admin panel" />
+
+<p>Dashboard content will go here.</p>

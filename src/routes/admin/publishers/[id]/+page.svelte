@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import AdminPage from '$components/AdminPage.svelte';
+	import AdminHeader from '$components/AdminHeader.svelte';
 	import Button from '$components/Button.svelte';
 	import ButtonGroup from '$components/ButtonGroup.svelte';
 	import FeedPreviewModal from '$components/FeedPreviewModal.svelte';
@@ -77,40 +77,16 @@
 </svelte:head>
 
 {#await publisherPromise}
-	<AdminPage title="Publisher Details" subtitle="View publisher information, feeds, and stories">
-		<p>Loading publisher...</p>
-	</AdminPage>
+	<AdminHeader title="Publisher Details" subtitle="View publisher information, feeds, and stories" />
+	<p>Loading publisher...</p>
 {:then publisher}
-	<AdminPage
+	<AdminHeader
 		title="Publisher Details"
 		subtitle="View publisher information, feeds, and stories"
 		lastBreadcrumbSegment={publisher?.name}
 	>
-		{#if !publisher}
-			<p class="error">Publisher not found</p>
-		{:else}
-			<section class="details">
-				<h2>Details</h2>
-				<dl>
-					<dt>Name</dt>
-					<dd>{publisher.name}</dd>
-
-					<dt>Type</dt>
-					<dd>{publisher.type}</dd>
-
-					<dt>Language</dt>
-					<dd>{publisher.language?.name ?? 'N/A'} ({publisher.language?.code})</dd>
-
-					<dt>Base URL</dt>
-					<dd><a href={publisher.baseUrl} target="_blank">{publisher.baseUrl}</a></dd>
-
-					<dt>Status</dt>
-					<dd>{publisher.active ? 'Active' : 'Inactive'}</dd>
-
-					<dt>Created</dt>
-					<dd>{new Date(publisher.createdAt).toLocaleDateString()}</dd>
-				</dl>
-
+		{#snippet actions()}
+			{#if publisher}
 				<ButtonGroup>
 					<Button onclick={() => openEditModal(publisher)}>
 						{#snippet icon()}
@@ -125,196 +101,222 @@
 						Delete
 					</Button>
 				</ButtonGroup>
+			{/if}
+		{/snippet}
+	</AdminHeader>
 
-				<Modal open={editModalOpen} title="Edit Publisher" onClose={closeEditModal}>
-					<form
-						{...updatePublisher.enhance(async ({ submit }) => {
-							try {
-								await submit();
-								closeEditModal();
-							} catch (error) {
-								console.error('Form submission error:', error);
-							}
-						})}
-						class="edit-form"
-					>
-						<input type="hidden" name="id" value={updatePublisher.fields.id.value()} />
+	{#if !publisher}
+		<p class="error">Publisher not found</p>
+	{:else}
+		<section class="details">
+			<h2>Details</h2>
+			<dl>
+				<dt>Name</dt>
+				<dd>{publisher.name}</dd>
 
-						<div class="field">
-							<label for="name">Name</label>
-							<input id="name" {...updatePublisher.fields.name.as('text')} />
-							{#each updatePublisher.fields.name.issues() as issue}
-								<span class="field-error">{issue.message}</span>
-							{/each}
-						</div>
+				<dt>Type</dt>
+				<dd>{publisher.type}</dd>
 
-						<div class="field">
-							<label for="type">Type</label>
-							<select id="type" {...updatePublisher.fields.type.as('select')}>
-								<option value="rferl">RFE/RL</option>
-								<option value="competitor">Competitor</option>
-							</select>
-							{#each updatePublisher.fields.type.issues() as issue}
-								<span class="field-error">{issue.message}</span>
-							{/each}
-						</div>
+				<dt>Language</dt>
+				<dd>{publisher.language?.name ?? 'N/A'} ({publisher.language?.code})</dd>
 
-						<div class="field">
-							<label for="baseUrl">Base URL</label>
-							<input id="baseUrl" {...updatePublisher.fields.baseUrl.as('url')} />
-							{#each updatePublisher.fields.baseUrl.issues() as issue}
-								<span class="field-error">{issue.message}</span>
-							{/each}
-						</div>
+				<dt>Base URL</dt>
+				<dd><a href={publisher.baseUrl} target="_blank">{publisher.baseUrl}</a></dd>
 
-						<div class="field">
-							<label for="languageId">Language</label>
-							<select id="languageId" {...updatePublisher.fields.languageId.as('select')}>
-								<option value="">Select a language</option>
-								{#await getLanguages() then languages}
-									{#each languages as language (language.id)}
-										<option value={language.id}>{language.name_en} ({language.code})</option>
-									{/each}
-								{/await}
-							</select>
-							{#each updatePublisher.fields.languageId.issues() as issue}
-								<span class="field-error">{issue.message}</span>
-							{/each}
-						</div>
+				<dt>Status</dt>
+				<dd>{publisher.active ? 'Active' : 'Inactive'}</dd>
 
-						<div class="field field--checkbox">
-							<label>
-								<input {...updatePublisher.fields.active.as('checkbox')} />
-								Active
-							</label>
-						</div>
+				<dt>Created</dt>
+				<dd>{new Date(publisher.createdAt).toLocaleDateString()}</dd>
+			</dl>
 
-						<div class="actions">
-							<Button type="submit">Save Changes</Button>
-						</div>
-					</form>
-				</Modal>
-			</section>
+			<Modal open={editModalOpen} title="Edit Publisher" onClose={closeEditModal}>
+				<form
+					{...updatePublisher.enhance(async ({ submit }) => {
+						try {
+							await submit();
+							closeEditModal();
+						} catch (error) {
+							console.error('Form submission error:', error);
+						}
+					})}
+					class="edit-form"
+				>
+					<input type="hidden" name="id" value={updatePublisher.fields.id.value()} />
 
-			<section class="feeds">
-				<h2>Feeds ({publisher.feeds.length})</h2>
-				{#if publisher.feeds.length === 0}
-					<p class="empty">No feeds configured</p>
+					<div class="field">
+						<label for="name">Name</label>
+						<input id="name" {...updatePublisher.fields.name.as('text')} />
+						{#each updatePublisher.fields.name.issues() as issue}
+							<span class="field-error">{issue.message}</span>
+						{/each}
+					</div>
+
+					<div class="field">
+						<label for="type">Type</label>
+						<select id="type" {...updatePublisher.fields.type.as('select')}>
+							<option value="rferl">RFE/RL</option>
+							<option value="competitor">Competitor</option>
+						</select>
+						{#each updatePublisher.fields.type.issues() as issue}
+							<span class="field-error">{issue.message}</span>
+						{/each}
+					</div>
+
+					<div class="field">
+						<label for="baseUrl">Base URL</label>
+						<input id="baseUrl" {...updatePublisher.fields.baseUrl.as('url')} />
+						{#each updatePublisher.fields.baseUrl.issues() as issue}
+							<span class="field-error">{issue.message}</span>
+						{/each}
+					</div>
+
+					<div class="field">
+						<label for="languageId">Language</label>
+						<select id="languageId" {...updatePublisher.fields.languageId.as('select')}>
+							<option value="">Select a language</option>
+							{#await getLanguages() then languages}
+								{#each languages as language (language.id)}
+									<option value={language.id}>{language.name_en} ({language.code})</option>
+								{/each}
+							{/await}
+						</select>
+						{#each updatePublisher.fields.languageId.issues() as issue}
+							<span class="field-error">{issue.message}</span>
+						{/each}
+					</div>
+
+					<div class="field field--checkbox">
+						<label>
+							<input {...updatePublisher.fields.active.as('checkbox')} />
+							Active
+						</label>
+					</div>
+
+					<div class="form-actions">
+						<Button type="submit">Save Changes</Button>
+					</div>
+				</form>
+			</Modal>
+		</section>
+
+		<section class="feeds">
+			<h2>Feeds ({publisher.feeds.length})</h2>
+			{#if publisher.feeds.length === 0}
+				<p class="empty">No feeds configured</p>
+			{:else}
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>URL</th>
+							<th>Stories</th>
+							<th>Last Polled</th>
+							<th>Status</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each publisher.feeds as feed (feed.id)}
+							<tr>
+								<td><a href="/admin/feeds/{feed.id}">{feed.name}</a></td>
+								<td class="url"><a href={feed.url} target="_blank">{feed.url}</a></td>
+								<td>{feed._count.stories}</td>
+								<td
+									>{feed.lastPolledAt
+										? new Date(feed.lastPolledAt).toLocaleString()
+										: 'Never'}</td
+								>
+								<td class:error={feed.lastError}>
+									{#if feed.lastError}
+										Error
+									{:else}
+										{feed.active ? 'Active' : 'Inactive'}
+									{/if}
+								</td>
+								<td class="actions">
+									<ActionButton
+										icon={PhPencilLineDuotone}
+										title="Edit feed"
+										onclick={() => handleEditFeed(feed)}
+									/>
+									<ActionButton
+										icon={PhArrowsClockwiseDuotone}
+										title="Requeue feed"
+										onclick={() => handleRequeueFeed(feed)}
+									/>
+									<ActionButton
+										icon={PhEyeDuotone}
+										title="Preview feed"
+										onclick={() => handlePreviewFeed(feed)}
+									/>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			{/if}
+		</section>
+
+		<section class="stories">
+			<h2>Recent Stories</h2>
+			{#await getPublisherStories(id)}
+				<p>Loading stories...</p>
+			{:then stories}
+				{#if stories.length === 0}
+					<p class="empty">No stories yet</p>
 				{:else}
 					<table class="table">
 						<thead>
 							<tr>
-								<th>Name</th>
-								<th>URL</th>
-								<th>Stories</th>
-								<th>Last Polled</th>
+								<th>Title</th>
+								<th>Feed</th>
 								<th>Status</th>
-								<th>Actions</th>
+								<th>Translation</th>
+								<th>Summary</th>
+								<th>Published</th>
 							</tr>
 						</thead>
 						<tbody>
-							{#each publisher.feeds as feed (feed.id)}
+							{#each stories as story (story.id)}
 								<tr>
-									<td><a href="/admin/feeds/{feed.id}">{feed.name}</a></td>
-									<td class="url"><a href={feed.url} target="_blank">{feed.url}</a></td>
-									<td>{feed._count.stories}</td>
-									<td
-										>{feed.lastPolledAt
-											? new Date(feed.lastPolledAt).toLocaleString()
-											: 'Never'}</td
-									>
-									<td class:error={feed.lastError}>
-										{#if feed.lastError}
-											Error
+									<td class="title">
+										<a href={story.sourceUrl} target="_blank">{story.originalTitle}</a>
+									</td>
+									<td>{story.feed.name}</td>
+									<td class:error={story.status === 'failed'}>
+										{story.status}
+									</td>
+									<td>
+										{#if story.translations.length > 0}
+											{story.translations[0].status}
 										{:else}
-											{feed.active ? 'Active' : 'Inactive'}
+											-
 										{/if}
 									</td>
-									<td class="actions">
-										<ActionButton
-											icon={PhPencilLineDuotone}
-											title="Edit feed"
-											onclick={() => handleEditFeed(feed)}
-										/>
-										<ActionButton
-											icon={PhArrowsClockwiseDuotone}
-											title="Requeue feed"
-											onclick={() => handleRequeueFeed(feed)}
-										/>
-										<ActionButton
-											icon={PhEyeDuotone}
-											title="Preview feed"
-											onclick={() => handlePreviewFeed(feed)}
-										/>
+									<td>
+										{#if story.summaries.length > 0}
+											{story.summaries[0].status}
+										{:else}
+											-
+										{/if}
+									</td>
+									<td>
+										{story.publishedAt ? new Date(story.publishedAt).toLocaleDateString() : '-'}
 									</td>
 								</tr>
 							{/each}
 						</tbody>
 					</table>
 				{/if}
-			</section>
-
-			<section class="stories">
-				<h2>Recent Stories</h2>
-				{#await getPublisherStories(id)}
-					<p>Loading stories...</p>
-				{:then stories}
-					{#if stories.length === 0}
-						<p class="empty">No stories yet</p>
-					{:else}
-						<table class="table">
-							<thead>
-								<tr>
-									<th>Title</th>
-									<th>Feed</th>
-									<th>Status</th>
-									<th>Translation</th>
-									<th>Summary</th>
-									<th>Published</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each stories as story (story.id)}
-									<tr>
-										<td class="title">
-											<a href={story.sourceUrl} target="_blank">{story.originalTitle}</a>
-										</td>
-										<td>{story.feed.name}</td>
-										<td class:error={story.status === 'failed'}>
-											{story.status}
-										</td>
-										<td>
-											{#if story.translations.length > 0}
-												{story.translations[0].status}
-											{:else}
-												-
-											{/if}
-										</td>
-										<td>
-											{#if story.summaries.length > 0}
-												{story.summaries[0].status}
-											{:else}
-												-
-											{/if}
-										</td>
-										<td>
-											{story.publishedAt ? new Date(story.publishedAt).toLocaleDateString() : '-'}
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					{/if}
-				{:catch}
-					<p class="error">Error loading stories</p>
-				{/await}
-			</section>
-		{/if}
-	</AdminPage>
+			{:catch}
+				<p class="error">Error loading stories</p>
+			{/await}
+		</section>
+	{/if}
 {:catch}
-	<AdminPage title="Publisher Details" subtitle="View publisher information, feeds, and stories">
-		<p class="error">Error loading publisher</p>
-	</AdminPage>
+	<AdminHeader title="Publisher Details" subtitle="View publisher information, feeds, and stories" />
+	<p class="error">Error loading publisher</p>
 {/await}
 
 <FeedPreviewModal
@@ -459,8 +461,9 @@
 		gap: 0.25rem;
 	}
 
-	.edit-form .actions {
+	.form-actions {
 		margin-top: 0.5rem;
+		display: flex;
 		justify-content: flex-end;
 	}
 </style>
