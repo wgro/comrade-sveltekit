@@ -1,4 +1,4 @@
-import { Job } from 'sidequest';
+import { Job, logger } from 'sidequest';
 import { prisma } from '../../src/lib/server/db/connection.ts';
 import { fetchAndParseFeed, type FeedEntry } from '../../src/lib/server/services/rss/index.ts';
 import { StoryStatus } from '../../src/lib/server/db/models/index.ts';
@@ -7,7 +7,6 @@ import {
 	type ExtractedContent,
 	type ExtractedMetadata
 } from '../../src/lib/server/services/extraction/index.ts';
-import { TranslateStoryJob } from './TranslateStoryJob.ts';
 
 interface StoryExclusion {
 	ruleType: string;
@@ -40,6 +39,8 @@ function matchesStoryExclusion(
 
 export class PollFeedJob extends Job {
 	async run(feedId: string) {
+		const log = logger('PollFeedJob');
+
 		// 1. Fetch feed with publisher -> language relation and all exclusions
 		const feed = await prisma.feed.findUnique({
 			where: { id: feedId },
@@ -58,10 +59,12 @@ export class PollFeedJob extends Job {
 			return { skipped: true, reason: 'Feed inactive' };
 		}
 
-		// Log exclusion counts for debugging
-		console.log(
-			`[PollFeedJob] Feed ${feed.name}: ${feed.categoryExclusions.length} category exclusions, ${feed.storyExclusions.length} story exclusions`
-		);
+		log.debug('Starting feed poll', {
+			feedId,
+			feedName: feed.name,
+			categoryExclusions: feed.categoryExclusions.length,
+			storyExclusions: feed.storyExclusions.length
+		});
 
 		try {
 			// 2. Fetch and parse RSS
@@ -90,9 +93,10 @@ export class PollFeedJob extends Job {
 				);
 				if (hasExcludedCategory) {
 					categoryExcludedCount++;
-					console.log(
-						`[PollFeedJob] Category excluded: "${entry.title}" (categories: ${entry.categories.join(', ')})`
-					);
+					log.debug('Category excluded', {
+						title: entry.title,
+						categories: entry.categories
+					});
 				} else {
 					afterCategoryFilter.push(entry);
 				}
@@ -109,9 +113,15 @@ export class PollFeedJob extends Job {
 
 				try {
 					extracted = await extractFromUrl(entry.link);
+					// Rate limit: wait 5 seconds between extractions
+					await new Promise((resolve) => setTimeout(resolve, 1000));
 				} catch (error) {
 					extractError = error instanceof Error ? error.message : String(error);
-					console.log(`[PollFeedJob] Extraction failed for "${entry.title}": ${extractError}`);
+					log.warn('Extraction failed', {
+						title: entry.title,
+						url: entry.link,
+						error: extractError
+					});
 				}
 
 				// Check story exclusions if extraction succeeded
@@ -120,9 +130,11 @@ export class PollFeedJob extends Job {
 
 					if (matchedExclusion) {
 						storyExcludedCount++;
-						console.log(
-							`[PollFeedJob] Story excluded: "${entry.title}" (${matchedExclusion.ruleType}=${matchedExclusion.value})`
-						);
+						log.debug('Story excluded', {
+							title: entry.title,
+							ruleType: matchedExclusion.ruleType,
+							ruleValue: matchedExclusion.value
+						});
 						continue; // Skip this entry entirely
 					}
 				}
@@ -144,6 +156,11 @@ export class PollFeedJob extends Job {
 						}
 					});
 					createdStories.push(story);
+					log.info('Story created', {
+						storyId: story.id,
+						title: story.originalTitle,
+						status: story.status
+					});
 					// TODO: Uncomment this when we have a working translation service
 					// await Sidequest.build(TranslateStoryJob).queue('stories').enqueue(story.id);
 				} else {
@@ -161,6 +178,12 @@ export class PollFeedJob extends Job {
 						}
 					});
 					failedStories.push(story);
+					log.warn('Story created with failed status', {
+						storyId: story.id,
+						title: story.originalTitle,
+						status: story.status,
+						error: extractError
+					});
 				}
 			}
 
@@ -170,12 +193,16 @@ export class PollFeedJob extends Job {
 				data: { lastPolledAt: new Date(), lastError: null }
 			});
 
-			const totalExcluded = categoryExcludedCount + storyExcludedCount;
-			console.log(
-				`[PollFeedJob] Feed ${feed.name}: found ${parsed.entries.length} entries, ` +
-					`${newEntries.length} new, excluded ${totalExcluded} (${categoryExcludedCount} category, ${storyExcludedCount} story), ` +
-					`created ${createdStories.length} stories, ${failedStories.length} failed`
-			);
+			log.info('Feed poll completed', {
+				feedId,
+				feedName: feed.name,
+				entriesFound: parsed.entries.length,
+				newEntries: newEntries.length,
+				categoryExcluded: categoryExcludedCount,
+				storyExcluded: storyExcludedCount,
+				storiesCreated: createdStories.length,
+				storiesFailed: failedStories.length
+			});
 
 			return {
 				entriesFound: parsed.entries.length,
